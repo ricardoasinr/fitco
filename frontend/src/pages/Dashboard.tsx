@@ -32,22 +32,23 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="info-card">
-          <h3>Card 1</h3>
-          <ul className="feature-list">
-            <li>Item de relleno 1</li>
-            <li>Item de relleno 2</li>
-            <li>Item de relleno 3</li>
-            <li>Item de relleno 4</li>
-          </ul>
+          <h3>📅 Eventos Wellness</h3>
+          <p>Descubre y participa en nuestras sesiones de bienestar</p>
+          <button 
+            onClick={() => navigate('/events')} 
+            className="btn-primary"
+          >
+            Ver Eventos Disponibles
+          </button>
         </div>
 
         <div className="info-card">
-          <h3>Card 2</h3>
+          <h3>🌟 Características</h3>
           <ul className="feature-list">
-            <li>Item de relleno 1</li>
-            <li>Item de relleno 2</li>
-            <li>Item de relleno 3</li>
-            <li>Item de relleno 4</li>
+            <li>✅ Autenticación segura con JWT</li>
+            <li>✅ Control de acceso por roles</li>
+            <li>✅ Eventos wellness disponibles</li>
+            <li>✅ Gestión administrativa</li>
           </ul>
         </div>
 

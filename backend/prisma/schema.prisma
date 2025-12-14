@@ -27,3 +27,31 @@ enum Role {
   USER
 }
 
+model ExerciseType {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+
+  @@map("exercise_types")
+}
+
+model Event {
+  id             String       @id @default(uuid())
+  name           String
+  description    String
+  date           DateTime
+  time           String
+  capacity       Int
+  exerciseTypeId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  exerciseType ExerciseType @relation(fields: [exerciseTypeId], references: [id])
+
+  @@map("events")
+}
+

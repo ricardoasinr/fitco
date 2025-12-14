@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
+import Events from './pages/Events';
+import EventManagement from './pages/EventManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -13,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/events" element={<Events />} />
           <Route
             path="/dashboard"
             element={
@@ -26,6 +29,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/events"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <EventManagement />
               </ProtectedRoute>
             }
           />

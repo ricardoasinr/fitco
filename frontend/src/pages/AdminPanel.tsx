@@ -25,12 +25,6 @@ const AdminPanel: React.FC = () => {
       </div>
 
       <div className="dashboard-content">
-        <div className="welcome-card admin-card">
-          <h2>👑 Admin Panel</h2>
-          <p>Welcome, {user?.name}</p>
-          <p className="user-info">Email: {user?.email}</p>
-        </div>
-
         <div className="info-card">
           <h3>🔐 Admin Features</h3>
           <p>This panel is only accessible to administrators.</p>
@@ -43,15 +37,20 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <div className="info-card">
-          <h3>📊 Admin Capabilities (Future)</h3>
-          <p>Features to be implemented:</p>
+          <h3>📊 Admin Capabilities</h3>
+          <p>Funcionalidades administrativas disponibles:</p>
           <ul className="feature-list">
-            <li>👥 User management</li>
-            <li>📅 Session creation and management</li>
-            <li>✅ Mark session attendance</li>
-            <li>📈 View aggregated impact reports</li>
-            <li>📊 Analytics and metrics dashboard</li>
+            <li>✅ Gestión de eventos wellness</li>
+            <li>✅ Creación y edición de tipos de ejercicio</li>
+            <li>🔄 Control de capacidad de eventos</li>
+            <li>📋 Visualización de eventos programados</li>
           </ul>
+          <button 
+            onClick={() => navigate('/admin/events')} 
+            className="btn-primary"
+          >
+            Gestionar Eventos
+          </button>
         </div>
 
         <div className="info-card">
