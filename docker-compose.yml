@@ -21,6 +21,72 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://fitco:fitco123@db:5432/fitco_db
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-key-change-in-production-8a7f6e5d4c3b2a1}
+      - JWT_EXPIRES_IN=1d
+      - NODE_ENV=${NODE_ENV:-development}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - fitco_network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+      - VITE_PROXY_TARGET=http://backend:3000
+    depends_on:
+      - backend
+    networks:
+      - fitco_network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  prisma-studio:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: prisma_studio
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=postgresql://fitco:fitco123@db:5432/fitco_db
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - fitco_network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npx prisma studio --port 5555 --browser none --hostname 0.0.0.0
+
   # postgres_test:
   #   image: postgres:15-alpine
   #   container_name: fitco_postgres_test
