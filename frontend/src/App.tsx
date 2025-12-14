@@ -6,6 +6,10 @@ import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import Events from './pages/Events';
 import EventManagement from './pages/EventManagement';
+import MyRegistrations from './pages/MyRegistrations';
+import WellnessForm from './pages/WellnessForm';
+import WellnessImpact from './pages/WellnessImpact';
+import AttendanceCheck from './pages/AttendanceCheck';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -25,6 +29,30 @@ function App() {
             }
           />
           <Route
+            path="/my-registrations"
+            element={
+              <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
+                <MyRegistrations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wellness/:id"
+            element={
+              <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
+                <WellnessForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wellness/impact/:registrationId"
+            element={
+              <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
+                <WellnessImpact />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -37,6 +65,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
                 <EventManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/attendance/:eventId"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <AttendanceCheck />
               </ProtectedRoute>
             }
           />

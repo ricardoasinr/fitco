@@ -7,6 +7,9 @@ export type EventWithExerciseType = Event & {
     name: string;
     isActive: boolean;
   };
+  _count?: {
+    registrations: number;
+  };
 };
 
 export interface IEventsRepository {

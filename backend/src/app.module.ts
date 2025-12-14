@@ -9,6 +9,9 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { EventsModule } from './events/events.module';
 import { ExerciseTypesModule } from './exercise-types/exercise-types.module';
+import { RegistrationsModule } from './registrations/registrations.module';
+import { WellnessAssessmentsModule } from './wellness-assessments/wellness-assessments.module';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { ExerciseTypesModule } from './exercise-types/exercise-types.module';
     AuthModule,
     EventsModule,
     ExerciseTypesModule,
+    RegistrationsModule,
+    WellnessAssessmentsModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [

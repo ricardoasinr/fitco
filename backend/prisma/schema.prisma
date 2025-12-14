@@ -19,6 +19,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  registrations Registration[]
+
   @@map("users")
 }
 
@@ -46,12 +48,75 @@ model Event {
   date           DateTime
   time           String
   capacity       Int
+  isActive       Boolean      @default(true)
   exerciseTypeId String
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  exerciseType ExerciseType @relation(fields: [exerciseTypeId], references: [id])
+  exerciseType  ExerciseType   @relation(fields: [exerciseTypeId], references: [id])
+  registrations Registration[]
 
   @@map("events")
+}
+
+// Inscripción del usuario al evento
+model Registration {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  qrCode    String   @unique @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event               Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  attendance          Attendance?
+  wellnessAssessments WellnessAssessment[]
+
+  @@unique([userId, eventId])
+  @@map("registrations")
+}
+
+// Evaluación de bienestar PRE o POST evento
+model WellnessAssessment {
+  id             String               @id @default(uuid())
+  registrationId String
+  type           WellnessType
+  sleepQuality   Int?                 // 1-10, null si no completado
+  stressLevel    Int?                 // 1-10, null si no completado
+  mood           Int?                 // 1-10, null si no completado
+  status         WellnessStatus       @default(PENDING)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@unique([registrationId, type])
+  @@map("wellness_assessments")
+}
+
+enum WellnessType {
+  PRE
+  POST
+}
+
+enum WellnessStatus {
+  PENDING
+  COMPLETED
+}
+
+// Registro de asistencia al evento
+model Attendance {
+  id             String   @id @default(uuid())
+  registrationId String   @unique
+  attended       Boolean  @default(false)
+  checkedAt      DateTime?
+  checkedBy      String?  // ID del admin que marcó la asistencia
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@map("attendances")
 }
 

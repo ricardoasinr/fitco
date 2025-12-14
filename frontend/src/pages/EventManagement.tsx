@@ -96,6 +96,10 @@ const EventManagement: React.FC = () => {
     navigate('/');
   };
 
+  const handleAttendance = (eventId: string) => {
+    navigate(`/admin/attendance/${eventId}`);
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -175,6 +179,7 @@ const EventManagement: React.FC = () => {
                     isAdmin={true}
                     onEdit={handleEditEvent}
                     onDelete={handleDeleteEvent}
+                    onAttendance={handleAttendance}
                   />
                 ))}
               </div>

@@ -22,50 +22,41 @@ import {
 export class EventsRepository implements IEventsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly includeRelations = {
+    exerciseType: {
+      select: {
+        id: true,
+        name: true,
+        isActive: true,
+      },
+    },
+    _count: {
+      select: {
+        registrations: true,
+      },
+    },
+  };
+
   async create(data: CreateEventDto): Promise<EventWithExerciseType> {
     return this.prisma.event.create({
       data: {
         ...data,
         date: new Date(data.date),
       },
-      include: {
-        exerciseType: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-          },
-        },
-      },
+      include: this.includeRelations,
     });
   }
 
   async findById(id: string): Promise<EventWithExerciseType | null> {
     return this.prisma.event.findUnique({
       where: { id },
-      include: {
-        exerciseType: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-          },
-        },
-      },
+      include: this.includeRelations,
     });
   }
 
   async findAll(): Promise<EventWithExerciseType[]> {
     return this.prisma.event.findMany({
-      include: {
-        exerciseType: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-          },
-        },
-      },
+      include: this.includeRelations,
       orderBy: { date: 'asc' },
     });
   }
@@ -84,15 +75,7 @@ export class EventsRepository implements IEventsRepository {
     return this.prisma.event.update({
       where: { id },
       data: updateData,
-      include: {
-        exerciseType: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-          },
-        },
-      },
+      include: this.includeRelations,
     });
   }
 
