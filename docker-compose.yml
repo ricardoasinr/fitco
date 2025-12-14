@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fitco
+      POSTGRES_PASSWORD: fitco123
+      POSTGRES_DB: fitco_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fitco_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitco -d fitco_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # postgres_test:
+  #   image: postgres:15-alpine
+  #   container_name: fitco_postgres_test
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: fitco
+  #     POSTGRES_PASSWORD: fitco123
+  #     POSTGRES_DB: fitco_test_db
+  #   ports:
+  #     - "5433:5432"
+  #   networks:
+  #     - fitco_network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U fitco -d fitco_test_db"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  fitco_network:
+    driver: bridge
+
