@@ -121,7 +121,7 @@ const WellnessImpact: React.FC = () => {
           <div className="impact-card">
             <h2>Tu Impacto Wellness</h2>
             <p className="subtitle">
-              {registration.event.name} - {formatDate(registration.event.date)}
+              {registration.event.name} - {formatDate(registration.eventInstance?.dateTime || registration.event.startDate)}
             </p>
 
             {!hasCompleteData ? (

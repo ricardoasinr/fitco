@@ -1,4 +1,5 @@
 import { PartialType, OmitType } from '@nestjs/mapped-types';
+import { IsBoolean, IsOptional } from 'class-validator';
 import { CreateEventDto } from './create-event.dto';
 
 /**
@@ -9,4 +10,8 @@ import { CreateEventDto } from './create-event.dto';
  */
 export class UpdateEventDto extends PartialType(
   OmitType(CreateEventDto, ['recurrenceType', 'recurrencePattern'] as const),
-) {}
+) {
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}

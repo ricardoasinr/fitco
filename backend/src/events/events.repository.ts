@@ -104,6 +104,61 @@ export class EventsRepository implements IEventsRepository {
     return events as EventWithRelations[];
   }
 
+  async findAllNotDeleted(): Promise<EventWithRelations[]> {
+    const events = await this.prisma.event.findMany({
+      where: { deletedAt: null },
+      include: this.includeWithInstances,
+      orderBy: { startDate: 'asc' },
+    });
+    return events as EventWithRelations[];
+  }
+
+  async findActiveAndNotDeleted(): Promise<EventWithRelations[]> {
+    const events = await this.prisma.event.findMany({
+      where: { 
+        isActive: true,
+        deletedAt: null 
+      },
+      include: this.includeWithInstances,
+      orderBy: { startDate: 'asc' },
+    });
+    return events as EventWithRelations[];
+  }
+
+  async findByIdForUser(id: string, userId?: string): Promise<EventWithRelations | null> {
+    // Si el usuario está especificado, incluir eventos donde el usuario tiene registros
+    // incluso si el evento está inactivo
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: this.includeWithInstances,
+    });
+
+    if (!event) return null;
+    
+    // Si el evento está eliminado, no mostrarlo nunca
+    if (event.deletedAt) return null;
+
+    // Si el evento está activo, mostrarlo a todos
+    if (event.isActive) return event as EventWithRelations;
+
+    // Si el evento está inactivo pero no eliminado, 
+    // solo mostrarlo si el usuario tiene un registro
+    if (userId) {
+      const hasRegistration = await this.prisma.registration.findFirst({
+        where: {
+          userId,
+          eventId: id,
+        },
+      });
+      
+      if (hasRegistration) {
+        return event as EventWithRelations;
+      }
+    }
+
+    return null;
+  }
+
   async update(id: string, data: Partial<Event>): Promise<EventWithRelations> {
     const updateData: any = { ...data };
 
@@ -122,6 +177,13 @@ export class EventsRepository implements IEventsRepository {
     });
 
     return event as EventWithRelations;
+  }
+
+  async softDelete(id: string): Promise<Event> {
+    return this.prisma.event.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 
   async delete(id: string): Promise<Event> {

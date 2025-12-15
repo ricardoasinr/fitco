@@ -46,6 +46,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           <span>Mis Inscripciones</span>
         </button>
 
+        <button
+          className={`sidebar-item ${isActive('/wellness-evaluations') ? 'active' : ''}`}
+          onClick={() => navigate('/wellness-evaluations')}
+        >
+          <span className="sidebar-icon">🌟</span>
+          <span>Wellness Evaluation</span>
+        </button>
+
         {user?.role === 'ADMIN' && (
           <>
             <div className="sidebar-divider"></div>

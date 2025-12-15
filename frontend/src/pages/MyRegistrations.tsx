@@ -1,31 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Registration } from '../types/event.types';
 import { registrationsService } from '../services/registrations.service';
+import Sidebar from '../components/Sidebar';
 import '../styles/Dashboard.css';
+import '../styles/Sidebar.css';
 import '../styles/Registrations.css';
+import '../styles/Wellness.css';
 
 /**
  * MyRegistrations - Página para ver inscripciones del usuario
  *
  * Muestra:
- * - Lista de inscripciones con QR code
- * - Fecha/hora de la instancia seleccionada
- * - Estado de wellness assessments
- * - Estado de asistencia
- * - Acciones disponibles
+ * - Vista resumida: Lista de inscripciones como tarjetas simples
+ * - Vista detalle: QR code, wellness assessments, y acciones
  */
 const MyRegistrations: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadRegistrations();
   }, []);
+
+  useEffect(() => {
+    if (id && registrations.length > 0) {
+      const registration = registrations.find(r => r.id === id);
+      if (registration) {
+        setSelectedRegistration(registration);
+      }
+    } else {
+      setSelectedRegistration(null);
+    }
+  }, [id, registrations]);
 
   const loadRegistrations = async () => {
     try {
@@ -45,11 +58,12 @@ const MyRegistrations: React.FC = () => {
     navigate('/');
   };
 
-  const handleCancelRegistration = async (id: string) => {
+  const handleCancelRegistration = async (registrationId: string) => {
     if (!confirm('¿Estás seguro de cancelar esta inscripción?')) return;
 
     try {
-      await registrationsService.cancel(id);
+      await registrationsService.cancel(registrationId);
+      navigate('/my-registrations');
       await loadRegistrations();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al cancelar inscripción');
@@ -144,107 +158,192 @@ const MyRegistrations: React.FC = () => {
     return new Date(dateString) < new Date();
   };
 
-  return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <div className="dashboard-logo">
-          <h1>🎫 Mis Inscripciones</h1>
-          <span className="role-badge">{user?.role}</span>
-        </div>
-        <div className="header-actions">
-          <button onClick={() => navigate('/events')} className="btn-secondary">
-            Ver Eventos
-          </button>
-          <button onClick={() => navigate('/dashboard')} className="btn-secondary">
-            Dashboard
-          </button>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
-        </div>
-      </div>
+  const handleCardClick = (registrationId: string) => {
+    navigate(`/my-registrations/${registrationId}`);
+  };
 
-      <div className="dashboard-content">
-        <div className="welcome-card">
-          <h2>Tus Inscripciones</h2>
-          <p>Gestiona tus inscripciones a eventos wellness y completa tus evaluaciones</p>
-        </div>
+  const handleBackToList = () => {
+    navigate('/my-registrations');
+  };
 
-        {error && <div className="error-message">{error}</div>}
+  // Vista de detalle de una inscripción específica
+  if (selectedRegistration) {
+    const preAssessment = selectedRegistration.wellnessAssessments.find(w => w.type === 'PRE');
+    const postAssessment = selectedRegistration.wellnessAssessments.find(w => w.type === 'POST');
 
-        {loading ? (
-          <div className="loading">Cargando inscripciones...</div>
-        ) : registrations.length === 0 ? (
-          <div className="empty-state">
-            <h3>📭 No tienes inscripciones</h3>
-            <p>Explora los eventos disponibles y regístrate</p>
-            <button onClick={() => navigate('/events')} className="btn-primary">
-              Ver Eventos
+    return (
+      <div className="layout-with-sidebar">
+        <Sidebar onLogout={handleLogout} />
+        
+        <div className="main-content">
+          <div className="dashboard-content-wrapper">
+            <button onClick={handleBackToList} className="btn-back">
+              ← Volver a Mis Inscripciones
             </button>
-          </div>
-        ) : (
-          <div className="registrations-grid">
-            {registrations.map((registration) => (
-              <div key={registration.id} className="registration-card">
-                <div className="registration-header">
-                  <h3>{registration.event.name}</h3>
-                  {getStatusBadge(registration)}
-                </div>
 
-                <div className="registration-info">
-                  <p className="event-type">
-                    🏋️ {registration.event.exerciseType.name}
-                  </p>
-                  <p className="event-date">
-                    📅 {formatDate(registration.eventInstance.dateTime)}
-                  </p>
-                  <p className="event-time">
-                    🕐 {formatTime(registration.eventInstance.dateTime)}
-                  </p>
-                </div>
+            <div className="registration-detail-card">
+              <div className="detail-header">
+                <h2 className="detail-title">{selectedRegistration.event.name}</h2>
+                <p className="detail-subtitle">
+                  🏋️ {selectedRegistration.event.exerciseType.name}
+                </p>
+                {getStatusBadge(selectedRegistration)}
+              </div>
 
-                <div className="qr-section">
-                  <h4>Tu código QR</h4>
-                  <div className="qr-code-display">
-                    <code>{registration.qrCode}</code>
+              <div className="detail-sections">
+                {/* Información del evento */}
+                <div className="detail-section">
+                  <h4>📅 Información del Evento</h4>
+                  <div className="detail-item">
+                    <span className="detail-icon">📅</span>
+                    <span className="detail-text">
+                      {formatDate(selectedRegistration.eventInstance.dateTime)}
+                    </span>
                   </div>
-                  <p className="qr-hint">Presenta este código al llegar al evento</p>
+                  <div className="detail-item">
+                    <span className="detail-icon">🕐</span>
+                    <span className="detail-text">
+                      {formatTime(selectedRegistration.eventInstance.dateTime)}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="wellness-status">
-                  <h4>Estado Wellness</h4>
-                  <div className="wellness-indicators">
-                    {registration.wellnessAssessments.map((assessment) => (
-                      <div
-                        key={assessment.id}
-                        className={`wellness-indicator ${assessment.status.toLowerCase()}`}
-                      >
-                        <span className="indicator-type">{assessment.type}</span>
-                        <span className="indicator-status">
-                          {assessment.status === 'COMPLETED' ? '✅' : '⏳'}
-                        </span>
+                {/* Código QR */}
+                <div className="detail-section">
+                  <h4>🎫 Tu Código QR</h4>
+                  <div className="qr-code-large">
+                    <code>{selectedRegistration.qrCode}</code>
+                  </div>
+                  <p className="qr-hint" style={{ marginTop: '12px', textAlign: 'center', color: '#7f8c8d', fontSize: '14px' }}>
+                    Presenta este código al llegar al evento
+                  </p>
+                </div>
+
+                {/* Estado Wellness */}
+                <div className="detail-section">
+                  <h4>🌟 Evaluaciones Wellness</h4>
+                  <div className="wellness-section">
+                    {preAssessment && (
+                      <div className="wellness-item">
+                        <div className="wellness-item-info">
+                          <span className="wellness-item-type">📋 PRE</span>
+                          <span className="wellness-item-status">
+                            {preAssessment.status === 'COMPLETED' ? 'Completado' : 'Pendiente'}
+                          </span>
+                        </div>
+                        {preAssessment.status === 'PENDING' && (
+                          <button
+                            onClick={() => navigate(`/wellness/${preAssessment.id}`)}
+                            className="btn-action btn-wellness"
+                            style={{ padding: '8px 16px', fontSize: '14px' }}
+                          >
+                            Completar
+                          </button>
+                        )}
                       </div>
-                    ))}
+                    )}
+                    {postAssessment && (
+                      <div className="wellness-item">
+                        <div className="wellness-item-info">
+                          <span className="wellness-item-type">📝 POST</span>
+                          <span className="wellness-item-status">
+                            {postAssessment.status === 'COMPLETED' ? 'Completado' : 'Pendiente'}
+                          </span>
+                        </div>
+                        {postAssessment.status === 'PENDING' && (
+                          <button
+                            onClick={() => navigate(`/wellness/${postAssessment.id}`)}
+                            className="btn-action btn-wellness"
+                            style={{ padding: '8px 16px', fontSize: '14px' }}
+                          >
+                            Completar
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="registration-actions">
-                  {getPendingAction(registration)}
+                {/* Acciones */}
+                <div className="registration-actions" style={{ marginTop: '20px' }}>
+                  {getPendingAction(selectedRegistration)}
 
-                  {!registration.attendance?.attended &&
-                    !isInstancePast(registration.eventInstance.dateTime) && (
+                  {!selectedRegistration.attendance?.attended &&
+                    !isInstancePast(selectedRegistration.eventInstance.dateTime) && (
                       <button
-                        onClick={() => handleCancelRegistration(registration.id)}
+                        onClick={() => handleCancelRegistration(selectedRegistration.id)}
                         className="btn-action btn-cancel"
                       >
-                        ❌ Cancelar
+                        ❌ Cancelar Inscripción
                       </button>
                     )}
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  // Vista de lista resumida
+  return (
+    <div className="layout-with-sidebar">
+      <Sidebar onLogout={handleLogout} />
+      
+      <div className="main-content">
+        <div className="dashboard-content-wrapper">
+          <div className="welcome-section">
+            <h1 className="welcome-title">🎫 Mis Inscripciones</h1>
+            <p style={{ color: '#666', marginTop: '15px', fontSize: '16px' }}>
+              Haz clic en una inscripción para ver los detalles y tu código QR
+            </p>
+          </div>
+
+          {error && <div className="error-message">{error}</div>}
+
+          {loading ? (
+            <div className="loading-card">
+              <div className="loading">Cargando inscripciones...</div>
+            </div>
+          ) : registrations.length === 0 ? (
+            <div className="empty-state-card">
+              <h3>📭 No tienes inscripciones</h3>
+              <p>Explora los eventos disponibles y regístrate</p>
+              <button onClick={() => navigate('/events')} className="btn-primary" style={{ marginTop: '20px', maxWidth: '250px' }}>
+                Ver Eventos
+              </button>
+            </div>
+          ) : (
+            <div className="registrations-grid">
+              {registrations.map((registration) => (
+                <div 
+                  key={registration.id} 
+                  className="registration-card registration-card-compact"
+                  onClick={() => handleCardClick(registration.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="registration-header">
+                    <h3>{registration.event.name}</h3>
+                    {getStatusBadge(registration)}
+                  </div>
+
+                  <div className="registration-info">
+                    <p className="event-type">
+                      🏋️ {registration.event.exerciseType.name}
+                    </p>
+                    <p className="event-date">
+                      📅 {formatDate(registration.eventInstance.dateTime)}
+                    </p>
+                    <p className="event-time">
+                      🕐 {formatTime(registration.eventInstance.dateTime)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

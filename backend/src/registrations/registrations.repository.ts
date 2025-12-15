@@ -141,7 +141,12 @@ export class RegistrationsRepository implements IRegistrationsRepository {
 
   async findByUserId(userId: string): Promise<RegistrationWithRelations[]> {
     return this.prisma.registration.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        event: {
+          deletedAt: null, // No mostrar registros de eventos eliminados
+        },
+      },
       include: this.includeRelations,
       orderBy: { createdAt: 'desc' },
     });
@@ -159,7 +164,12 @@ export class RegistrationsRepository implements IRegistrationsRepository {
     eventInstanceId: string,
   ): Promise<RegistrationWithRelations[]> {
     return this.prisma.registration.findMany({
-      where: { eventInstanceId },
+      where: { 
+        eventInstanceId,
+        event: {
+          deletedAt: null, // No mostrar registros de eventos eliminados
+        },
+      },
       include: this.includeRelations,
       orderBy: { createdAt: 'desc' },
     });

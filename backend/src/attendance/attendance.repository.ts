@@ -100,12 +100,10 @@ export class AttendanceRepository implements IAttendanceRepository {
       return null;
     }
 
-    const registration = await this.prisma.registration.findUnique({
+    const registration = await this.prisma.registration.findFirst({
       where: {
-        userId_eventId: {
-          userId: user.id,
-          eventId,
-        },
+        userId: user.id,
+        eventId,
       },
       select: { id: true },
     });

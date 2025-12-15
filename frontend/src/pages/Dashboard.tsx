@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Event, Registration, WellnessImpactResponse } from '../types/event.types';
 import { eventsService } from '../services/events.service';
@@ -14,6 +14,7 @@ import '../styles/Sidebar.css';
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [events, setEvents] = useState<Event[]>([]);
   const [myRegistrations, setMyRegistrations] = useState<Registration[]>([]);
   const [lastImpact, setLastImpact] = useState<WellnessImpactResponse | null>(null);
@@ -24,8 +25,13 @@ const Dashboard: React.FC = () => {
   const [showInstanceSelector, setShowInstanceSelector] = useState(false);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    // Recargar datos cuando el componente se monta o cuando el usuario navega al Dashboard
+    // Solo recargar si estamos en la ruta del dashboard
+    if (location.pathname === '/dashboard') {
+      loadDashboardData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const loadDashboardData = async () => {
     try {
@@ -46,6 +52,9 @@ const Dashboard: React.FC = () => {
         // Obtener el último impacto de wellness
         if (registrationsData.length > 0) {
           await loadLastWellnessImpact(registrationsData);
+        } else {
+          // Si no hay inscripciones, limpiar el impacto
+          setLastImpact(null);
         }
       }
 
@@ -60,19 +69,56 @@ const Dashboard: React.FC = () => {
 
   const loadLastWellnessImpact = async (registrations: Registration[]) => {
     try {
-      // Buscar la última inscripción con ambas evaluaciones completadas
-      for (const registration of registrations.reverse()) {
-        const preAssessment = registration.wellnessAssessments.find(w => w.type === 'PRE' && w.status === 'COMPLETED');
-        const postAssessment = registration.wellnessAssessments.find(w => w.type === 'POST' && w.status === 'COMPLETED');
+      // Ordenar inscripciones por fecha del evento (más reciente primero)
+      // Usar createdAt como criterio secundario para desempatar
+      const sortedRegistrations = [...registrations].sort((a, b) => {
+        const dateA = a.eventInstance?.dateTime 
+          ? new Date(a.eventInstance.dateTime).getTime()
+          : new Date(a.event.startDate).getTime();
+        const dateB = b.eventInstance?.dateTime
+          ? new Date(b.eventInstance.dateTime).getTime()
+          : new Date(b.event.startDate).getTime();
         
-        if (preAssessment && postAssessment) {
-          const impact = await wellnessService.getImpact(registration.id);
-          setLastImpact(impact);
-          break;
+        // Si las fechas son iguales, usar createdAt como desempate
+        if (dateB === dateA) {
+          const createdA = new Date(a.createdAt || 0).getTime();
+          const createdB = new Date(b.createdAt || 0).getTime();
+          return createdB - createdA; // Más reciente primero
         }
+        
+        return dateB - dateA; // Más reciente primero
+      });
+
+      // Buscar la última inscripción con ambas evaluaciones completadas
+      // Intentar obtener el impacto directamente del backend para cada inscripción
+      // en orden de más reciente a más antigua, hasta encontrar una con impacto válido
+      let foundImpact = false;
+      for (const registration of sortedRegistrations) {
+        try {
+          // Intentar obtener el impacto directamente del backend
+          // Esto asegura que obtenemos datos actualizados y válidos
+          const impact = await wellnessService.getImpact(registration.id);
+          
+          // Solo usar este impacto si tiene datos válidos (ambas evaluaciones completadas)
+          if (impact && impact.impact && impact.impact.overallImpact !== null) {
+            setLastImpact(impact);
+            foundImpact = true;
+            break;
+          }
+        } catch (error) {
+          // Si hay un error al obtener el impacto (por ejemplo, evaluaciones incompletas),
+          // continuar con la siguiente inscripción
+          continue;
+        }
+      }
+
+      // Si no se encontró ningún impacto, limpiar el estado anterior
+      if (!foundImpact) {
+        setLastImpact(null);
       }
     } catch (error) {
       console.error('Error loading wellness impact:', error);
+      setLastImpact(null);
     }
   };
 
@@ -121,12 +167,13 @@ const Dashboard: React.FC = () => {
   };
 
   const renderImpactSummary = () => {
-    if (!lastImpact || !lastImpact.impact.overallImpact) {
+    if (!lastImpact || lastImpact.impact.overallImpact === null) {
       return null;
     }
 
     const { impact } = lastImpact;
-    const overallImpact = impact.overallImpact;
+    // TypeScript type guard - aseguramos que overallImpact no es null (ya verificado arriba)
+    const overallImpact = impact.overallImpact as number;
 
     let summaryText = '';
     let summaryClass = '';
@@ -157,8 +204,8 @@ const Dashboard: React.FC = () => {
           {impact.stressLevelChange !== null && (
             <div className="impact-metric">
               <span className="metric-label">Nivel de Estrés</span>
-              <span className={`metric-value ${impact.stressLevelChange <= 0 ? 'positive' : 'negative'}`}>
-                {impact.stressLevelChange > 0 ? '+' : ''}{impact.stressLevelChange.toFixed(1)}
+              <span className={`metric-value ${impact.stressLevelChange >= 0 ? 'positive' : 'negative'}`}>
+                {(-impact.stressLevelChange).toFixed(1)}
               </span>
             </div>
           )}

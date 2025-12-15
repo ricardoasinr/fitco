@@ -127,15 +127,17 @@ export class EventsService {
   }
 
   async findAll(): Promise<EventWithRelations[]> {
-    return this.eventsRepository.findAll();
+    // Para admins: mostrar todos excepto eliminados
+    return this.eventsRepository.findAllNotDeleted();
   }
 
   async findAllActive(): Promise<EventWithRelations[]> {
-    return this.eventsRepository.findAllActive();
+    // Para usuarios: solo activos y no eliminados
+    return this.eventsRepository.findActiveAndNotDeleted();
   }
 
-  async findById(id: string): Promise<EventWithRelations> {
-    const event = await this.eventsRepository.findById(id);
+  async findById(id: string, userId?: string): Promise<EventWithRelations> {
+    const event = await this.eventsRepository.findByIdForUser(id, userId);
 
     if (!event) {
       throw new NotFoundException(`Event with id ${id} not found`);
@@ -203,6 +205,7 @@ export class EventsService {
     if (updateEventDto.time !== undefined) updateData.time = updateEventDto.time;
     if (updateEventDto.capacity !== undefined) updateData.capacity = updateEventDto.capacity;
     if (updateEventDto.exerciseTypeId !== undefined) updateData.exerciseTypeId = updateEventDto.exerciseTypeId;
+    if (updateEventDto.isActive !== undefined) updateData.isActive = updateEventDto.isActive;
 
     return this.eventsRepository.update(id, updateData);
   }
@@ -214,6 +217,18 @@ export class EventsService {
       throw new NotFoundException(`Event with id ${id} not found`);
     }
 
+    // Realizar soft delete en lugar de eliminación física
+    await this.eventsRepository.softDelete(id);
+  }
+
+  async permanentDelete(id: string): Promise<void> {
+    const event = await this.eventsRepository.findById(id);
+
+    if (!event) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
+    // Eliminación física (solo si realmente se necesita)
     await this.eventsRepository.delete(id);
   }
 }

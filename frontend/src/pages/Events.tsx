@@ -6,7 +6,9 @@ import { eventsService } from '../services/events.service';
 import { registrationsService } from '../services/registrations.service';
 import EventCard from '../components/EventCard';
 import InstanceSelector from '../components/InstanceSelector';
+import Sidebar from '../components/Sidebar';
 import '../styles/Dashboard.css';
+import '../styles/Sidebar.css';
 
 /**
  * Events - Página pública para visualizar eventos disponibles
@@ -122,39 +124,113 @@ const Events: React.FC = () => {
       ? events
       : events.filter((e) => e.exerciseType.name === filterType);
 
+  // Si el usuario está autenticado, mostrar con sidebar
+  if (isAuthenticated) {
+    return (
+      <div className="layout-with-sidebar">
+        <Sidebar onLogout={handleLogout} />
+        
+        <div className="main-content">
+          <div className="dashboard-content-wrapper">
+            <div className="welcome-section">
+              <h1 className="welcome-title">📅 Eventos Wellness Disponibles</h1>
+              <p style={{ color: '#666', marginTop: '15px', fontSize: '16px' }}>
+                Descubre y participa en nuestras sesiones de bienestar
+              </p>
+            </div>
+
+            {uniqueTypes.length > 0 && (
+              <div className="filter-card">
+                <label style={{ fontWeight: 600, color: '#333', marginRight: '15px' }}>Filtrar por tipo:</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">Todos</option>
+                  {uniqueTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
+            {loading ? (
+              <div className="loading-card">
+                <div className="loading">Cargando eventos...</div>
+              </div>
+            ) : filteredEvents.length === 0 ? (
+              <div className="empty-state-card">
+                <h3>📭 No hay eventos disponibles</h3>
+                <p>
+                  {filterType !== 'all'
+                    ? 'Intenta con otro filtro'
+                    : 'Vuelve pronto para ver nuevos eventos'}
+                </p>
+              </div>
+            ) : (
+              <div className="events-section">
+                <div className="events-grid">
+                  {filteredEvents.map((event) => {
+                    const registeredInstances = getRegisteredInstances(event.id);
+                    return (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        isAdmin={user?.role === 'ADMIN'}
+                        isAuthenticated={isAuthenticated}
+                        isRegistered={registeredInstances.length > 0}
+                        registeredInstancesCount={registeredInstances.length}
+                        onRegister={handleRegisterClick}
+                        onAttendance={handleAttendance}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {user?.role === 'ADMIN' && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                <button
+                  onClick={() => navigate('/admin/events')}
+                  className="btn-primary btn-large"
+                >
+                  👑 Gestionar Eventos
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {showInstanceSelector && selectedEvent && (
+          <InstanceSelector
+            event={selectedEvent}
+            onSelect={handleInstanceSelect}
+            onCancel={handleCancelInstanceSelection}
+            excludeInstanceIds={getRegisteredInstances(selectedEvent.id)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Si NO está autenticado, mostrar la vista pública sin sidebar
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
         <div className="dashboard-logo">
           <h1>📅 Eventos FITCO</h1>
-          {isAuthenticated && <span className="role-badge">{user?.role}</span>}
         </div>
         <div className="header-actions">
-          {isAuthenticated ? (
-            <>
-              {user?.role === 'USER' && (
-                <button
-                  onClick={() => navigate('/my-registrations')}
-                  className="btn-secondary"
-                >
-                  🎫 Mis Inscripciones
-                </button>
-              )}
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="btn-secondary"
-              >
-                Dashboard
-              </button>
-              <button onClick={handleLogout} className="btn-logout">
-                Logout
-              </button>
-            </>
-          ) : (
-            <button onClick={() => navigate('/')} className="btn-primary">
-              Login
-            </button>
-          )}
+          <button onClick={() => navigate('/')} className="btn-primary">
+            Login
+          </button>
         </div>
       </div>
 
@@ -163,11 +239,9 @@ const Events: React.FC = () => {
           <div className="welcome-card">
             <h2>Eventos Wellness Disponibles</h2>
             <p>Descubre y participa en nuestras sesiones de bienestar</p>
-            {!isAuthenticated && (
-              <p className="login-hint">
-                💡 <strong>Inicia sesión</strong> para inscribirte a los eventos
-              </p>
-            )}
+            <p className="login-hint">
+              💡 <strong>Inicia sesión</strong> para inscribirte a los eventos
+            </p>
           </div>
 
           {uniqueTypes.length > 0 && (
@@ -211,10 +285,10 @@ const Events: React.FC = () => {
                 <EventCard
                   key={event.id}
                   event={event}
-                  isAdmin={user?.role === 'ADMIN'}
-                  isAuthenticated={isAuthenticated}
-                  isRegistered={registeredInstances.length > 0}
-                  registeredInstancesCount={registeredInstances.length}
+                  isAdmin={false}
+                  isAuthenticated={false}
+                  isRegistered={false}
+                  registeredInstancesCount={0}
                   onRegister={handleRegisterClick}
                   onAttendance={handleAttendance}
                 />
@@ -222,28 +296,7 @@ const Events: React.FC = () => {
             })}
           </div>
         )}
-
-        {isAuthenticated && user?.role === 'ADMIN' && (
-          <div className="admin-actions">
-            <button
-              onClick={() => navigate('/admin/events')}
-              className="btn-primary btn-large"
-            >
-              👑 Gestionar Eventos
-            </button>
-          </div>
-        )}
       </div>
-
-      {/* Modal de selección de instancia */}
-      {showInstanceSelector && selectedEvent && (
-        <InstanceSelector
-          event={selectedEvent}
-          onSelect={handleInstanceSelect}
-          onCancel={handleCancelInstanceSelection}
-          excludeInstanceIds={getRegisteredInstances(selectedEvent.id)}
-        />
-      )}
     </div>
   );
 };

@@ -52,6 +52,7 @@ export interface Event {
   recurrenceType: RecurrenceType;
   recurrencePattern: RecurrencePattern | null;
   isActive: boolean;
+  deletedAt: string | null;
   exerciseTypeId: string;
   createdAt: string;
   updatedAt: string;
@@ -97,6 +98,7 @@ export interface UpdateEventDto {
   time?: string;
   capacity?: number;
   exerciseTypeId?: string;
+  isActive?: boolean;
 }
 
 // Registration Types
@@ -162,6 +164,7 @@ export interface Registration {
     time: string;
     capacity: number;
     isActive: boolean;
+    deletedAt?: string | null;
     exerciseType: {
       id: string;
       name: string;

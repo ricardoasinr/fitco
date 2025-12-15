@@ -155,7 +155,7 @@ const WellnessForm: React.FC = () => {
             {assessment.registration && (
               <div className="event-info-banner">
                 <h3>{assessment.registration.event.name}</h3>
-                <p>📅 {formatDate(assessment.registration.event.date)}</p>
+                <p>📅 {assessment.registration.eventInstance ? formatDate(assessment.registration.eventInstance.dateTime) : formatDate(assessment.registration.event.startDate)}</p>
                 <p>🕐 {assessment.registration.event.time}</p>
               </div>
             )}

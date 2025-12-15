@@ -22,6 +22,14 @@ export const wellnessService = {
   },
 
   /**
+   * Obtener todas las evaluaciones pendientes con detalles (USER)
+   */
+  getPendingEvaluations: async (): Promise<WellnessAssessment[]> => {
+    const response = await api.get<WellnessAssessment[]>('/wellness/pending');
+    return response.data;
+  },
+
+  /**
    * Obtener evaluación por ID
    */
   getById: async (id: string): Promise<WellnessAssessment> => {

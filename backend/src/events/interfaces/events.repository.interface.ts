@@ -30,6 +30,10 @@ export interface IEventsRepository {
   findById(id: string): Promise<EventWithRelations | null>;
   findAll(): Promise<EventWithRelations[]>;
   findAllActive(): Promise<EventWithRelations[]>;
+  findAllNotDeleted(): Promise<EventWithRelations[]>;
+  findActiveAndNotDeleted(): Promise<EventWithRelations[]>;
+  findByIdForUser(id: string, userId?: string): Promise<EventWithRelations | null>;
   update(id: string, data: Partial<Event>): Promise<EventWithRelations>;
+  softDelete(id: string): Promise<Event>;
   delete(id: string): Promise<Event>;
 }

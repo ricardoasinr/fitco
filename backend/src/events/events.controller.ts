@@ -62,8 +62,8 @@ export class EventsController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findById(id);
+  findOne(@Param('id') id: string, @CurrentUser() user?: RequestUser) {
+    return this.eventsService.findById(id, user?.id);
   }
 
   @Patch(':id')

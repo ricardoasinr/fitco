@@ -9,6 +9,7 @@ import EventManagement from './pages/EventManagement';
 import MyRegistrations from './pages/MyRegistrations';
 import WellnessForm from './pages/WellnessForm';
 import WellnessImpact from './pages/WellnessImpact';
+import WellnessEvaluations from './pages/WellnessEvaluations';
 import AttendanceCheck from './pages/AttendanceCheck';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -33,6 +34,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
                 <MyRegistrations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-registrations/:id"
+            element={
+              <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
+                <MyRegistrations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wellness-evaluations"
+            element={
+              <ProtectedRoute allowedRoles={['USER', 'ADMIN']}>
+                <WellnessEvaluations />
               </ProtectedRoute>
             }
           />

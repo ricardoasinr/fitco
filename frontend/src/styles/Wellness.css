@@ -1,0 +1,239 @@
+/* Wellness Evaluations Page */
+.wellness-evaluations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.wellness-evaluation-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.wellness-evaluation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #FF6B35;
+}
+
+.evaluation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.evaluation-type-badge {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.evaluation-type-badge[data-type="PRE"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.evaluation-type-badge[data-type="POST"] {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.evaluation-event-info {
+  margin-bottom: 20px;
+}
+
+.evaluation-event-info h3 {
+  font-size: 20px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.evaluation-description {
+  color: #7f8c8d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.evaluation-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-icon {
+  font-size: 18px;
+}
+
+.detail-text {
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-complete-evaluation {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-complete-evaluation:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+/* Registration Detail Styles */
+.registration-detail-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 30px auto;
+}
+
+.detail-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.detail-title {
+  font-size: 28px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.detail-subtitle {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.detail-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.detail-section h4 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qr-code-large {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.qr-code-large code {
+  font-size: 24px;
+  color: #2c3e50;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.wellness-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wellness-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+}
+
+.wellness-item-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wellness-item-type {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.wellness-item-status {
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #ecf0f1;
+  color: #2c3e50;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.btn-back:hover {
+  background: #d5dbdb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .wellness-evaluations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-detail-card {
+    padding: 20px;
+    margin: 20px;
+  }
+
+  .detail-title {
+    font-size: 22px;
+  }
+}
+

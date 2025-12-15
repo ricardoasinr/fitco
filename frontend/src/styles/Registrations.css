@@ -23,6 +23,22 @@
   box-shadow: 0 12px 32px rgba(32, 178, 170, 0.15);
 }
 
+.registration-card-compact {
+  padding: 20px;
+  cursor: pointer;
+}
+
+.registration-card-compact .qr-section,
+.registration-card-compact .wellness-status,
+.registration-card-compact .registration-actions {
+  display: none;
+}
+
+.registration-card-compact .registration-info {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
 .registration-header {
   display: flex;
   justify-content: space-between;
