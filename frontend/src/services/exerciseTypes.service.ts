@@ -19,6 +19,14 @@ export const exerciseTypesService = {
   },
 
   /**
+   * Obtener TODOS los tipos de ejercicio incluyendo inactivos (ADMIN)
+   */
+  getAllForAdmin: async (): Promise<ExerciseType[]> => {
+    const response = await api.get<ExerciseType[]>('/exercise-types/admin/all');
+    return response.data;
+  },
+
+  /**
    * Obtener un tipo de ejercicio por ID
    */
   getById: async (id: string): Promise<ExerciseType> => {

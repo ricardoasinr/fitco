@@ -32,6 +32,24 @@ export class RecurrencePatternDto {
   intervalDays?: number;
 }
 
+/**
+ * Schedule individual para eventos recurrentes
+ * Permite múltiples horarios con sus propios días de la semana
+ */
+export class RecurrenceScheduleDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
+    message: 'Time must be in format HH:MM (24-hour format)',
+  })
+  time: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  weekdays?: number[];
+}
+
 export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
@@ -68,6 +86,12 @@ export class CreateEventDto {
   @ValidateNested()
   @Type(() => RecurrencePatternDto)
   recurrencePattern?: RecurrencePatternDto;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecurrenceScheduleDto)
+  schedules?: RecurrenceScheduleDto[];
 
   @IsUUID('4', { message: 'exerciseTypeId must be a valid UUID' })
   @IsNotEmpty()

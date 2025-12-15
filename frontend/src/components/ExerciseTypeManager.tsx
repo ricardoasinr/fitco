@@ -30,7 +30,7 @@ const ExerciseTypeManager: React.FC = () => {
   const loadExerciseTypes = async () => {
     try {
       setLoading(true);
-      const types = await exerciseTypesService.getAll();
+      const types = await exerciseTypesService.getAllForAdmin();
       setExerciseTypes(types);
       setError('');
     } catch (error: any) {
@@ -70,17 +70,6 @@ const ExerciseTypeManager: React.FC = () => {
       await loadExerciseTypes();
     } catch (error: any) {
       setError('Error al actualizar estado');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este tipo de ejercicio?')) return;
-    
-    try {
-      await exerciseTypesService.delete(id);
-      await loadExerciseTypes();
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Error al eliminar');
     }
   };
 
@@ -176,14 +165,7 @@ const ExerciseTypeManager: React.FC = () => {
                       className="btn-icon"
                       title={type.isActive ? 'Desactivar' : 'Activar'}
                     >
-                      {type.isActive ? '🔴' : '🟢'}
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(type.id)} 
-                      className="btn-icon btn-danger"
-                      title="Eliminar"
-                    >
-                      🗑️
+                      {type.isActive ? '🟢' : '🔴'}
                     </button>
                   </td>
                 </tr>

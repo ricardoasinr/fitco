@@ -59,7 +59,8 @@ const WellnessImpact: React.FC = () => {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 

@@ -43,6 +43,7 @@ const EventCard: React.FC<EventCardProps> = ({
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 
@@ -113,7 +114,11 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
         <div className="event-detail">
           <span className="detail-icon">⏰</span>
-          <span>{event.time}</span>
+          <span>
+            {isRecurring && event.instances && event.instances.length > 0
+              ? 'Múltiples horarios'
+              : event.time}
+          </span>
         </div>
         {isRecurring && (
           <div className="event-detail">
@@ -165,12 +170,6 @@ const EventCard: React.FC<EventCardProps> = ({
           </button>
           <button onClick={() => onEdit && onEdit(event)} className="btn-edit">
             ✏️ Editar
-          </button>
-          <button
-            onClick={() => onDelete && onDelete(event.id)}
-            className="btn-delete"
-          >
-            🗑️
           </button>
         </div>
       ) : isAuthenticated && !isEventPast ? (

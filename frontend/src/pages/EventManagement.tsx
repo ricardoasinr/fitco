@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Event, CreateEventDto } from '../types/event.types';
+import { Event, CreateEventDto, UpdateEventDto } from '../types/event.types';
 import { eventsService } from '../services/events.service';
 import AdminSidebar from '../components/AdminSidebar';
 import EventCard from '../components/EventCard';
@@ -45,9 +45,9 @@ const EventManagement: React.FC = () => {
     }
   };
 
-  const handleCreateEvent = async (data: CreateEventDto) => {
+  const handleCreateEvent = async (data: CreateEventDto | UpdateEventDto) => {
     try {
-      await eventsService.create(data);
+      await eventsService.create(data as CreateEventDto);
       await loadEvents();
       setShowEventForm(false);
       setEditingEvent(null);
@@ -56,7 +56,7 @@ const EventManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateEvent = async (data: CreateEventDto) => {
+  const handleUpdateEvent = async (data: CreateEventDto | UpdateEventDto) => {
     if (!editingEvent) return;
 
     try {
@@ -160,7 +160,6 @@ const EventManagement: React.FC = () => {
                     event={event}
                     isAdmin={true}
                     onEdit={handleEditEvent}
-                    onDelete={handleDeleteEvent}
                     onAttendance={handleAttendance}
                   />
                 ))}

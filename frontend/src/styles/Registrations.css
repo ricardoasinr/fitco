@@ -370,6 +370,10 @@
   transform: scale(1.1);
 }
 
+.wellness-slider.stress {
+  background: linear-gradient(to right, #28a745 0%, #ffc107 50%, #dc3545 100%);
+}
+
 .wellness-slider.stress::-webkit-slider-thumb {
   border-color: #dc3545;
 }

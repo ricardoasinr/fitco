@@ -119,10 +119,16 @@ const Events: React.FC = () => {
   };
 
   const uniqueTypes = Array.from(new Set(events.map((e) => e.exerciseType.name)));
+  
+  // Filtrar eventos: para usuarios no admin, solo mostrar activos
+  const visibleEvents = user?.role === 'ADMIN' 
+    ? events 
+    : events.filter((e) => e.isActive);
+  
   const filteredEvents =
     filterType === 'all'
-      ? events
-      : events.filter((e) => e.exerciseType.name === filterType);
+      ? visibleEvents
+      : visibleEvents.filter((e) => e.exerciseType.name === filterType);
 
   // Si el usuario está autenticado, mostrar con sidebar
   if (isAuthenticated) {

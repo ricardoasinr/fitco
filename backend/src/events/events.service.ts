@@ -59,22 +59,39 @@ export class EventsService {
     // Validar patrón de recurrencia
     const recurrenceType = createEventDto.recurrenceType || RecurrenceType.SINGLE;
     if (recurrenceType === RecurrenceType.WEEKLY) {
-      if (
+      // Si hay schedules, cada schedule debe tener weekdays
+      if (createEventDto.schedules && createEventDto.schedules.length > 0) {
+        for (const schedule of createEventDto.schedules) {
+          if (!schedule.weekdays || schedule.weekdays.length === 0) {
+            throw new BadRequestException(
+              'Weekly recurrence requires at least one weekday per schedule',
+            );
+          }
+          // Validar que los días estén entre 0 y 6
+          const invalidDays = schedule.weekdays.filter((d) => d < 0 || d > 6);
+          if (invalidDays.length > 0) {
+            throw new BadRequestException(
+              'Weekdays must be between 0 (Sunday) and 6 (Saturday)',
+            );
+          }
+        }
+      } else if (
         !createEventDto.recurrencePattern?.weekdays ||
         createEventDto.recurrencePattern.weekdays.length === 0
       ) {
         throw new BadRequestException(
           'Weekly recurrence requires at least one weekday',
         );
-      }
-      // Validar que los días estén entre 0 y 6
-      const invalidDays = createEventDto.recurrencePattern.weekdays.filter(
-        (d) => d < 0 || d > 6,
-      );
-      if (invalidDays.length > 0) {
-        throw new BadRequestException(
-          'Weekdays must be between 0 (Sunday) and 6 (Saturday)',
+      } else {
+        // Validar que los días estén entre 0 y 6
+        const invalidDays = createEventDto.recurrencePattern.weekdays.filter(
+          (d) => d < 0 || d > 6,
         );
+        if (invalidDays.length > 0) {
+          throw new BadRequestException(
+            'Weekdays must be between 0 (Sunday) and 6 (Saturday)',
+          );
+        }
       }
     }
 
@@ -102,15 +119,42 @@ export class EventsService {
     const event = await this.eventsRepository.create(createEventDto, userId);
 
     // Generar instancias automáticamente
-    const instanceDates = this.eventInstancesService.generateInstanceDates(
-      startDate,
-      endDate,
-      createEventDto.time,
-      recurrenceType,
-      createEventDto.recurrencePattern || null,
-    );
+    let allInstanceDates: Date[] = [];
 
-    if (instanceDates.length === 0) {
+    // Si hay múltiples schedules, generar instancias para cada uno
+    if (createEventDto.schedules && createEventDto.schedules.length > 0) {
+      for (const schedule of createEventDto.schedules) {
+        // Para WEEKLY, usar los weekdays del schedule si existen, sino los del recurrencePattern
+        const schedulePattern = recurrenceType === 'WEEKLY' 
+          ? { weekdays: schedule.weekdays || createEventDto.recurrencePattern?.weekdays }
+          : createEventDto.recurrencePattern || null;
+
+        const instanceDates = this.eventInstancesService.generateInstanceDates(
+          startDate,
+          endDate,
+          schedule.time,
+          recurrenceType,
+          schedulePattern,
+        );
+        allInstanceDates = [...allInstanceDates, ...instanceDates];
+      }
+    } else {
+      // Comportamiento legacy: un solo time
+      allInstanceDates = this.eventInstancesService.generateInstanceDates(
+        startDate,
+        endDate,
+        createEventDto.time,
+        recurrenceType,
+        createEventDto.recurrencePattern || null,
+      );
+    }
+
+    // Ordenar por fecha y eliminar duplicados
+    allInstanceDates = [...new Set(allInstanceDates.map(d => d.getTime()))]
+      .map(t => new Date(t))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    if (allInstanceDates.length === 0) {
       throw new BadRequestException(
         'No instances would be generated with the given recurrence pattern',
       );
@@ -118,7 +162,7 @@ export class EventsService {
 
     await this.eventInstancesService.createInstancesForEvent(
       event.id,
-      instanceDates,
+      allInstanceDates,
       createEventDto.capacity,
     );
 
@@ -185,6 +229,44 @@ export class EventsService {
       }
     }
 
+    // Validar patrón de recurrencia si se actualiza
+    const newRecurrenceType = updateEventDto.recurrenceType;
+    if (newRecurrenceType === RecurrenceType.WEEKLY) {
+      if (updateEventDto.schedules && updateEventDto.schedules.length > 0) {
+        for (const schedule of updateEventDto.schedules) {
+          if (!schedule.weekdays || schedule.weekdays.length === 0) {
+            throw new BadRequestException(
+              'Weekly recurrence requires at least one weekday per schedule',
+            );
+          }
+          const invalidDays = schedule.weekdays.filter((d) => d < 0 || d > 6);
+          if (invalidDays.length > 0) {
+            throw new BadRequestException(
+              'Weekdays must be between 0 (Sunday) and 6 (Saturday)',
+            );
+          }
+        }
+      } else if (
+        !updateEventDto.recurrencePattern?.weekdays ||
+        updateEventDto.recurrencePattern.weekdays.length === 0
+      ) {
+        throw new BadRequestException(
+          'Weekly recurrence requires at least one weekday',
+        );
+      }
+    }
+
+    if (newRecurrenceType === RecurrenceType.INTERVAL) {
+      if (
+        !updateEventDto.recurrencePattern?.intervalDays ||
+        updateEventDto.recurrencePattern.intervalDays < 1
+      ) {
+        throw new BadRequestException(
+          'Interval recurrence requires intervalDays >= 1',
+        );
+      }
+    }
+
     // Validar que el ExerciseType exista y esté activo si se actualiza
     if (updateEventDto.exerciseTypeId !== undefined) {
       const exerciseType = await this.exerciseTypesService.findById(
@@ -197,7 +279,7 @@ export class EventsService {
     }
 
     // Preparar datos para actualización
-    const updateData: Partial<Event> = {};
+    const updateData: any = {};
     if (updateEventDto.name !== undefined) updateData.name = updateEventDto.name;
     if (updateEventDto.description !== undefined) updateData.description = updateEventDto.description;
     if (updateEventDto.startDate !== undefined) updateData.startDate = new Date(updateEventDto.startDate);
@@ -206,8 +288,107 @@ export class EventsService {
     if (updateEventDto.capacity !== undefined) updateData.capacity = updateEventDto.capacity;
     if (updateEventDto.exerciseTypeId !== undefined) updateData.exerciseTypeId = updateEventDto.exerciseTypeId;
     if (updateEventDto.isActive !== undefined) updateData.isActive = updateEventDto.isActive;
+    if (updateEventDto.recurrenceType !== undefined) updateData.recurrenceType = updateEventDto.recurrenceType;
+    if (updateEventDto.recurrencePattern !== undefined) {
+      updateData.recurrencePattern = updateEventDto.recurrencePattern;
+    }
 
-    return this.eventsRepository.update(id, updateData);
+    // Actualizar el evento primero
+    const updatedEvent = await this.eventsRepository.update(id, updateData);
+
+    // Regenerar instancias si se solicita y hay cambios de recurrencia
+    if (updateEventDto.regenerateInstances) {
+      await this.regenerateEventInstances(id, updateEventDto);
+    }
+
+    // Retornar evento actualizado con instancias
+    return this.eventsRepository.findById(id) as Promise<EventWithRelations>;
+  }
+
+  /**
+   * Regenera las instancias futuras de un evento basándose en la nueva configuración
+   */
+  private async regenerateEventInstances(
+    eventId: string,
+    updateEventDto: UpdateEventDto,
+  ): Promise<void> {
+    // Obtener el evento actualizado
+    const event = await this.eventsRepository.findById(eventId);
+    if (!event) return;
+
+    // Eliminar instancias futuras sin registros
+    await this.eventInstancesService.deleteFutureInstancesWithoutRegistrations(eventId);
+
+    // Determinar los parámetros de generación
+    const startDate = updateEventDto.startDate 
+      ? new Date(updateEventDto.startDate) 
+      : new Date(event.startDate);
+    const endDate = updateEventDto.endDate 
+      ? new Date(updateEventDto.endDate) 
+      : new Date(event.endDate);
+    const time = updateEventDto.time || event.time;
+    const recurrenceType = updateEventDto.recurrenceType || event.recurrenceType;
+    const recurrencePattern = updateEventDto.recurrencePattern || 
+      (event.recurrencePattern as { weekdays?: number[]; intervalDays?: number } | null);
+    const capacity = updateEventDto.capacity || event.capacity;
+
+    // Usar la fecha actual como inicio si startDate es pasado
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const effectiveStartDate = startDate < today ? today : startDate;
+
+    // Generar nuevas instancias
+    let allInstanceDates: Date[] = [];
+
+    if (updateEventDto.schedules && updateEventDto.schedules.length > 0) {
+      for (const schedule of updateEventDto.schedules) {
+        const schedulePattern = recurrenceType === 'WEEKLY' 
+          ? { weekdays: schedule.weekdays || recurrencePattern?.weekdays }
+          : recurrencePattern;
+
+        const instanceDates = this.eventInstancesService.generateInstanceDates(
+          effectiveStartDate,
+          endDate,
+          schedule.time,
+          recurrenceType,
+          schedulePattern,
+        );
+        allInstanceDates = [...allInstanceDates, ...instanceDates];
+      }
+    } else {
+      allInstanceDates = this.eventInstancesService.generateInstanceDates(
+        effectiveStartDate,
+        endDate,
+        time,
+        recurrenceType,
+        recurrencePattern,
+      );
+    }
+
+    // Ordenar y eliminar duplicados internos
+    allInstanceDates = [...new Set(allInstanceDates.map(d => d.getTime()))]
+      .map(t => new Date(t))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    // Obtener instancias que quedaron (las preservadas con registros)
+    const preservedInstances = await this.eventInstancesService.getFutureInstances(eventId);
+    const preservedDateTimes = new Set(
+      preservedInstances.map(i => new Date(i.dateTime).getTime())
+    );
+
+    // Filtrar instancias que ya existen (las preservadas con registros)
+    const newInstanceDates = allInstanceDates.filter(date => 
+      !preservedDateTimes.has(date.getTime())
+    );
+
+    // Crear las nuevas instancias
+    if (newInstanceDates.length > 0) {
+      await this.eventInstancesService.createInstancesForEvent(
+        eventId,
+        newInstanceDates,
+        capacity,
+      );
+    }
   }
 
   async delete(id: string): Promise<void> {

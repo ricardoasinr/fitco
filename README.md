@@ -121,7 +121,31 @@ Este enfoque permite medir **impacto real**, no solo participación.
 
 ---
 
-## 3.5 Reportes
+## 3.5 Control de Asistencia con QR
+
+El sistema implementa un flujo de asistencia seguro y validado mediante códigos QR:
+
+1. **Generación**: Al registrarse, cada usuario recibe un código QR único para esa sesión.
+2. **Validación Pre-Requisito**: El sistema **bloquea** la marca de asistencia si el usuario no ha completado su **check-in de bienestar pre-sesión**.
+3. **Escaneo**: El ADMIN utiliza el escáner integrado en la aplicación para leer el QR del usuario.
+4. **Confirmación**: Si el usuario cumple los requisitos (Pre-sesión completada), se marca la asistencia exitosa.
+
+---
+
+## 3.6 Gestión Avanzada de Eventos (Soft Delete)
+
+Para garantizar la integridad de los datos históricos y métricas de bienestar, el sistema implementa un manejo de estados robusto:
+
+* **Activo**: Evento visible y disponible para registros.
+* **Inactivo**: Evento oculto de la lista pública, pero visible en el historial de los usuarios registrados. No permite nuevos registros.
+* **Eliminado (Soft Delete)**: El evento se oculta completamente de la interfaz, pero **persiste en la base de datos**.
+
+**¿Por qué Soft Delete?**
+Esto es crítico para una plataforma de impacto. Si se eliminara físicamente un evento, se perderían todas las métricas de bienestar (pre/post) asociadas a él, corrompiendo los reportes históricos de impacto.
+
+---
+
+## 3.7 Reportes
 
 El sistema incluye reportes **básicos y claros**, adecuados para un MVP:
 

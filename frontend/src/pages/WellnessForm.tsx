@@ -97,7 +97,8 @@ const WellnessForm: React.FC = () => {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 
@@ -198,14 +199,14 @@ const WellnessForm: React.FC = () => {
                     </div>
                     <input
                       type="range"
-                      min="1"
+                      min="0"
                       max="10"
                       value={sleepQuality}
                       onChange={(e) => setSleepQuality(Number(e.target.value))}
                       className="wellness-slider"
                     />
                     <div className="scale-labels">
-                      <span>1 - Muy malo</span>
+                      <span>0 - Muy malo</span>
                       <span>10 - Excelente</span>
                     </div>
                   </div>
@@ -225,14 +226,14 @@ const WellnessForm: React.FC = () => {
                     </div>
                     <input
                       type="range"
-                      min="1"
+                      min="0"
                       max="10"
                       value={stressLevel}
                       onChange={(e) => setStressLevel(Number(e.target.value))}
                       className="wellness-slider stress"
                     />
                     <div className="scale-labels">
-                      <span>1 - Sin estrés</span>
+                      <span>0 - Sin estrés</span>
                       <span>10 - Muy estresado</span>
                     </div>
                   </div>
@@ -252,14 +253,14 @@ const WellnessForm: React.FC = () => {
                     </div>
                     <input
                       type="range"
-                      min="1"
+                      min="0"
                       max="10"
                       value={mood}
                       onChange={(e) => setMood(Number(e.target.value))}
                       className="wellness-slider"
                     />
                     <div className="scale-labels">
-                      <span>1 - Muy bajo</span>
+                      <span>0 - Muy bajo</span>
                       <span>10 - Excelente</span>
                     </div>
                   </div>

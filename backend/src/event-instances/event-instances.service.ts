@@ -69,31 +69,55 @@ export class EventInstancesService {
     const dates: Date[] = [];
     const [hours, minutes] = time.split(':').map(Number);
 
+    // Validar que la hora sea válida
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      throw new BadRequestException(`Invalid time format: ${time}. Expected HH:MM format.`);
+    }
+
     if (recurrenceType === 'SINGLE') {
       const dateTime = new Date(startDate);
-      dateTime.setHours(hours, minutes, 0, 0);
+      // Usar UTC para evitar problemas de zona horaria
+      dateTime.setUTCHours(hours, minutes, 0, 0);
       dates.push(dateTime);
       return dates;
     }
 
+    // Para eventos recurrentes, empezar desde startDate y avanzar día por día
     const currentDate = new Date(startDate);
-    currentDate.setHours(hours, minutes, 0, 0);
+    // Resetear la hora a medianoche UTC antes de establecer la hora específica
+    currentDate.setUTCHours(0, 0, 0, 0);
+    currentDate.setUTCHours(hours, minutes, 0, 0);
 
-    while (currentDate <= endDate) {
+    const endDateTime = new Date(endDate);
+    endDateTime.setUTCHours(23, 59, 59, 999);
+
+    while (currentDate <= endDateTime) {
       if (recurrenceType === 'WEEKLY' && recurrencePattern?.weekdays) {
-        // getDay() returns 0 for Sunday, 1 for Monday, etc.
-        const dayOfWeek = currentDate.getDay();
+        // getUTCDay() returns 0 for Sunday, 1 for Monday, etc. in UTC
+        const dayOfWeek = currentDate.getUTCDay();
         if (recurrencePattern.weekdays.includes(dayOfWeek)) {
           dates.push(new Date(currentDate));
         }
-        currentDate.setDate(currentDate.getDate() + 1);
+        // Avanzar al siguiente día a la misma hora UTC
+        const nextDate = new Date(currentDate);
+        nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+        nextDate.setUTCHours(hours, minutes, 0, 0);
+        currentDate.setTime(nextDate.getTime());
       } else if (recurrenceType === 'INTERVAL' && recurrencePattern?.intervalDays) {
         dates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + recurrencePattern.intervalDays);
+        // Avanzar según el intervalo en UTC
+        const nextDate = new Date(currentDate);
+        nextDate.setUTCDate(nextDate.getUTCDate() + recurrencePattern.intervalDays);
+        nextDate.setUTCHours(hours, minutes, 0, 0);
+        currentDate.setTime(nextDate.getTime());
       } else {
         // Fallback: daily
         dates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
+        // Avanzar al siguiente día a la misma hora UTC
+        const nextDate = new Date(currentDate);
+        nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+        nextDate.setUTCHours(hours, minutes, 0, 0);
+        currentDate.setTime(nextDate.getTime());
       }
     }
 
@@ -120,6 +144,66 @@ export class EventInstancesService {
   async deactivateInstance(instanceId: string): Promise<void> {
     const instance = await this.findById(instanceId);
     await this.eventInstancesRepository.update(instanceId, { isActive: false });
+  }
+
+  /**
+   * Elimina instancias futuras de un evento que no tengan registros
+   * Retorna las instancias que no pudieron ser eliminadas (tienen registros)
+   */
+  async deleteFutureInstancesWithoutRegistrations(eventId: string): Promise<{
+    deleted: number;
+    preserved: number;
+  }> {
+    const now = new Date();
+    const instances = await this.eventInstancesRepository.findByEventId(eventId);
+    
+    let deleted = 0;
+    let preserved = 0;
+
+    for (const instance of instances) {
+      // Solo considerar instancias futuras
+      if (new Date(instance.dateTime) > now) {
+        const registrationCount = await this.eventInstancesRepository.countRegistrations(instance.id);
+        
+        if (registrationCount === 0) {
+          await this.eventInstancesRepository.delete(instance.id);
+          deleted++;
+        } else {
+          preserved++;
+        }
+      }
+    }
+
+    return { deleted, preserved };
+  }
+
+  /**
+   * Elimina TODAS las instancias futuras de un evento (para regeneración completa)
+   * Incluye aquellas con registros - usar con precaución
+   */
+  async deleteAllFutureInstances(eventId: string): Promise<number> {
+    const now = new Date();
+    const instances = await this.eventInstancesRepository.findByEventId(eventId);
+    
+    let deleted = 0;
+
+    for (const instance of instances) {
+      if (new Date(instance.dateTime) > now) {
+        await this.eventInstancesRepository.delete(instance.id);
+        deleted++;
+      }
+    }
+
+    return deleted;
+  }
+
+  /**
+   * Obtiene instancias futuras de un evento
+   */
+  async getFutureInstances(eventId: string): Promise<EventInstanceWithEvent[]> {
+    const now = new Date();
+    const instances = await this.eventInstancesRepository.findByEventId(eventId);
+    return instances.filter(instance => new Date(instance.dateTime) > now);
   }
 }
 

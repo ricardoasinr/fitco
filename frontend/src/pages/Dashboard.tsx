@@ -166,6 +166,11 @@ const Dashboard: React.FC = () => {
       .map((reg) => reg.eventInstanceId);
   };
 
+  // Filtrar eventos: para usuarios no admin, solo mostrar activos
+  const visibleEvents = user?.role === 'ADMIN' 
+    ? events 
+    : events.filter((e) => e.isActive);
+
   const renderImpactSummary = () => {
     if (!lastImpact || lastImpact.impact.overallImpact === null) {
       return null;

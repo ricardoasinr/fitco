@@ -60,6 +60,13 @@ export class ExerciseTypesController {
     return this.exerciseTypesService.findAllActive();
   }
 
+  @Get('admin/all')
+  @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
+  findAllForAdmin() {
+    return this.exerciseTypesService.findAll();
+  }
+
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {

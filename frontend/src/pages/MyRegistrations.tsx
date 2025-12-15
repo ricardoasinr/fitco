@@ -164,6 +164,7 @@ const MyRegistrations: React.FC = () => {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 
@@ -172,6 +173,7 @@ const MyRegistrations: React.FC = () => {
     return date.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC',
     });
   };
 

@@ -78,6 +78,12 @@ export interface UpdateExerciseTypeDto {
   isActive?: boolean;
 }
 
+// Schedule para múltiples horarios recurrentes
+export interface RecurrenceSchedule {
+  time: string;
+  weekdays?: number[];
+}
+
 export interface CreateEventDto {
   name: string;
   description: string;
@@ -87,6 +93,7 @@ export interface CreateEventDto {
   capacity: number;
   recurrenceType?: RecurrenceType;
   recurrencePattern?: RecurrencePattern;
+  schedules?: RecurrenceSchedule[];
   exerciseTypeId: string;
 }
 
@@ -97,8 +104,12 @@ export interface UpdateEventDto {
   endDate?: string;
   time?: string;
   capacity?: number;
+  recurrenceType?: RecurrenceType;
+  recurrencePattern?: RecurrencePattern;
+  schedules?: RecurrenceSchedule[];
   exerciseTypeId?: string;
   isActive?: boolean;
+  regenerateInstances?: boolean; // Flag para regenerar instancias
 }
 
 // Registration Types
@@ -204,7 +215,6 @@ export interface CompleteWellnessDto {
 }
 
 export interface MarkAttendanceDto {
-  registrationId?: string;
   qrCode?: string;
   email?: string;
   eventId?: string;

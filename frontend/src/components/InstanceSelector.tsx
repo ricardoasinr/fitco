@@ -107,6 +107,7 @@ const InstanceSelector: React.FC<InstanceSelectorProps> = ({
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 
@@ -115,6 +116,7 @@ const InstanceSelector: React.FC<InstanceSelectorProps> = ({
     return date.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC',
     });
   };
 

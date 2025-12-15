@@ -112,7 +112,8 @@ const AttendanceCheck: React.FC = () => {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 
@@ -123,7 +124,8 @@ const AttendanceCheck: React.FC = () => {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC',
     });
   };
 
