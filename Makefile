@@ -124,11 +124,17 @@ test-unit:
 
 test-int:
 	@echo "🧪 Ejecutando integration tests..."
-	docker-compose exec backend npm run test -- --testPathPattern=controller
+	@echo "📦 Asegurando que la base de datos de test esté corriendo..."
+	@docker-compose up -d postgres_test || true
+	@sleep 3
+	@docker-compose exec -e DATABASE_URL=postgresql://fitco:fitco123@postgres_test:5432/fitco_test_db -e TEST_DATABASE_URL=postgresql://fitco:fitco123@postgres_test:5432/fitco_test_db backend npm run test:integration
 
 test-e2e:
 	@echo "🧪 Ejecutando e2e tests..."
-	docker-compose exec backend npm run test:e2e
+	@echo "📦 Asegurando que la base de datos de test esté corriendo..."
+	@docker-compose up -d postgres_test || true
+	@sleep 3
+	@docker-compose exec -e DATABASE_URL=postgresql://fitco:fitco123@postgres_test:5432/fitco_test_db -e TEST_DATABASE_URL=postgresql://fitco:fitco123@postgres_test:5432/fitco_test_db backend npm run test:e2e
 
 test-all:
 	@echo "🧪 Ejecutando todos los tests..."

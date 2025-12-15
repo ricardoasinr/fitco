@@ -14,6 +14,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RecurrenceType } from '@prisma/client';
+import { IsAfterDate, IsNotInPast } from '../../common/validators/date.validators';
+import { IsValidRecurrencePattern } from '../../common/validators/recurrence.validators';
 
 /**
  * Patrón de recurrencia para eventos
@@ -61,10 +63,12 @@ export class CreateEventDto {
 
   @IsDateString()
   @IsNotEmpty()
+  @IsNotInPast()
   startDate: string;
 
   @IsDateString()
   @IsNotEmpty()
+  @IsAfterDate('startDate')
   endDate: string;
 
   @IsString()
@@ -85,6 +89,7 @@ export class CreateEventDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => RecurrencePatternDto)
+  @IsValidRecurrencePattern()
   recurrencePattern?: RecurrencePatternDto;
 
   @IsOptional()

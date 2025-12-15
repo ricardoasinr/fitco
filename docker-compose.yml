@@ -87,23 +87,23 @@ services:
       - /app/node_modules
     command: npx prisma studio --port 5555 --browser none --hostname 0.0.0.0
 
-  # postgres_test:
-  #   image: postgres:15-alpine
-  #   container_name: fitco_postgres_test
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_USER: fitco
-  #     POSTGRES_PASSWORD: fitco123
-  #     POSTGRES_DB: fitco_test_db
-  #   ports:
-  #     - "5433:5432"
-  #   networks:
-  #     - fitco_network
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U fitco -d fitco_test_db"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  postgres_test:
+    image: postgres:15-alpine
+    container_name: fitco_postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fitco
+      POSTGRES_PASSWORD: fitco123
+      POSTGRES_DB: fitco_test_db
+    ports:
+      - "5433:5432"
+    networks:
+      - fitco_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitco -d fitco_test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

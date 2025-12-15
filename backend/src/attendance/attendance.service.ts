@@ -3,7 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { WellnessType, WellnessStatus } from '@prisma/client';
+import { WellnessType } from '@prisma/client';
 import { AttendanceRepository } from './attendance.repository';
 import { WellnessAssessmentsRepository } from '../wellness-assessments/wellness-assessments.repository';
 import { MarkAttendanceDto } from './dto/mark-attendance.dto';
@@ -22,43 +22,13 @@ export class AttendanceService {
   constructor(
     private readonly attendanceRepository: AttendanceRepository,
     private readonly wellnessRepository: WellnessAssessmentsRepository,
-  ) {}
+  ) { }
 
   async markAttendance(
     adminId: string,
     markAttendanceDto: MarkAttendanceDto,
   ): Promise<AttendanceWithRegistration> {
-    const { registrationId, qrCode, email, eventId } = markAttendanceDto;
-
-    let attendance: AttendanceWithRegistration | null = null;
-
-    // Buscar por registrationId (más preciso, recomendado)
-    if (registrationId) {
-      attendance = await this.attendanceRepository.findByRegistrationId(registrationId);
-      if (!attendance) {
-        throw new NotFoundException('Registration not found with the provided registration ID');
-      }
-    }
-    // Buscar por QR code
-    else if (qrCode) {
-      attendance = await this.attendanceRepository.findByQrCode(qrCode);
-      if (!attendance) {
-        throw new NotFoundException('Registration not found with the provided QR code');
-      }
-    }
-    // Buscar por email y eventId (fallback)
-    else if (email && eventId) {
-      attendance = await this.attendanceRepository.findByUserEmail(email, eventId);
-      if (!attendance) {
-        throw new NotFoundException(
-          'Registration not found for the provided email and event',
-        );
-      }
-    } else {
-      throw new BadRequestException(
-        'Must provide either registrationId, qrCode, or both email and eventId',
-      );
-    }
+    const attendance = await this.findRegistrationForAttendance(markAttendanceDto);
 
     // Verificar que no se haya marcado asistencia ya
     if (attendance.attended) {
@@ -89,6 +59,40 @@ export class AttendanceService {
     });
 
     return updatedAttendance;
+  }
+
+  private async findRegistrationForAttendance(
+    dto: MarkAttendanceDto,
+  ): Promise<AttendanceWithRegistration> {
+    const { registrationId, qrCode, email, eventId } = dto;
+
+    if (registrationId) {
+      const attendance = await this.attendanceRepository.findByRegistrationId(registrationId);
+      if (!attendance) {
+        throw new NotFoundException('Registration not found with the provided registration ID');
+      }
+      return attendance;
+    }
+
+    if (qrCode) {
+      const attendance = await this.attendanceRepository.findByQrCode(qrCode);
+      if (!attendance) {
+        throw new NotFoundException('Registration not found with the provided QR code');
+      }
+      return attendance;
+    }
+
+    if (email && eventId) {
+      const attendance = await this.attendanceRepository.findByUserEmail(email, eventId);
+      if (!attendance) {
+        throw new NotFoundException('Registration not found for the provided email and event');
+      }
+      return attendance;
+    }
+
+    throw new BadRequestException(
+      'Must provide either registrationId, qrCode, or both email and eventId',
+    );
   }
 
   async findByEventId(eventId: string): Promise<AttendanceWithRegistration[]> {
@@ -137,5 +141,3 @@ export class AttendanceService {
     };
   }
 }
-
-

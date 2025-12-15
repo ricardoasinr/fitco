@@ -18,7 +18,7 @@ import { EventInstanceWithEvent } from './interfaces/event-instances.repository.
 export class EventInstancesService {
   constructor(
     private readonly eventInstancesRepository: EventInstancesRepository,
-  ) {}
+  ) { }
 
   async findById(id: string): Promise<EventInstanceWithEvent> {
     const instance = await this.eventInstancesRepository.findById(id);
@@ -125,6 +125,58 @@ export class EventInstancesService {
   }
 
   /**
+   * Genera todas las fechas para un evento basado en su configuración
+   * Encapsula la lógica de horarios múltiples vs horario único
+   */
+  generateDatesForEvent(
+    config: {
+      startDate: Date | string;
+      endDate: Date | string;
+      time: string;
+      recurrenceType: 'SINGLE' | 'WEEKLY' | 'INTERVAL';
+      recurrencePattern?: any;
+      schedules?: any[];
+    }
+  ): Date[] {
+    const startDate = new Date(config.startDate);
+    const endDate = new Date(config.endDate);
+    let allInstanceDates: Date[] = [];
+
+    // Si hay múltiples schedules, generar instancias para cada uno
+    if (config.schedules && config.schedules.length > 0) {
+      for (const schedule of config.schedules) {
+        // Para WEEKLY, usar los weekdays del schedule si existen, sino los del recurrencePattern
+        const schedulePattern = config.recurrenceType === 'WEEKLY'
+          ? { weekdays: schedule.weekdays || config.recurrencePattern?.weekdays }
+          : config.recurrencePattern || null;
+
+        const instanceDates = this.generateInstanceDates(
+          startDate,
+          endDate,
+          schedule.time,
+          config.recurrenceType,
+          schedulePattern,
+        );
+        allInstanceDates = [...allInstanceDates, ...instanceDates];
+      }
+    } else {
+      // Comportamiento legacy: un solo time
+      allInstanceDates = this.generateInstanceDates(
+        startDate,
+        endDate,
+        config.time,
+        config.recurrenceType,
+        config.recurrencePattern || null,
+      );
+    }
+
+    // Ordenar por fecha y eliminar duplicados
+    return [...new Set(allInstanceDates.map(d => d.getTime()))]
+      .map(t => new Date(t))
+      .sort((a, b) => a.getTime() - b.getTime());
+  }
+
+  /**
    * Crea múltiples instancias para un evento
    */
   async createInstancesForEvent(
@@ -156,7 +208,7 @@ export class EventInstancesService {
   }> {
     const now = new Date();
     const instances = await this.eventInstancesRepository.findByEventId(eventId);
-    
+
     let deleted = 0;
     let preserved = 0;
 
@@ -164,7 +216,7 @@ export class EventInstancesService {
       // Solo considerar instancias futuras
       if (new Date(instance.dateTime) > now) {
         const registrationCount = await this.eventInstancesRepository.countRegistrations(instance.id);
-        
+
         if (registrationCount === 0) {
           await this.eventInstancesRepository.delete(instance.id);
           deleted++;
@@ -184,7 +236,7 @@ export class EventInstancesService {
   async deleteAllFutureInstances(eventId: string): Promise<number> {
     const now = new Date();
     const instances = await this.eventInstancesRepository.findByEventId(eventId);
-    
+
     let deleted = 0;
 
     for (const instance of instances) {

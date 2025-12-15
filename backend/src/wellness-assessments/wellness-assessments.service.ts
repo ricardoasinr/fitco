@@ -26,7 +26,7 @@ export class WellnessAssessmentsService {
   constructor(
     private readonly wellnessRepository: WellnessAssessmentsRepository,
     private readonly registrationsRepository: RegistrationsRepository,
-  ) {}
+  ) { }
 
   async findPendingByUser(userId: string): Promise<WellnessAssessmentWithRegistration[]> {
     return this.wellnessRepository.findPendingByUserId(userId);
@@ -67,25 +67,9 @@ export class WellnessAssessmentsService {
 
     // Validar que se puede completar según el flujo
     if (assessment.type === WellnessType.PRE) {
-      // PRE se puede completar en cualquier momento antes del evento
-      const registration = await this.registrationsRepository.findById(
-        assessment.registrationId,
-      );
-      if (registration?.attendance?.attended) {
-        throw new BadRequestException(
-          'Cannot complete PRE assessment after attendance has been marked',
-        );
-      }
+      await this.validatePreAssessmentCompletion(assessment.registrationId);
     } else if (assessment.type === WellnessType.POST) {
-      // POST solo se puede completar después de marcar asistencia
-      const registration = await this.registrationsRepository.findById(
-        assessment.registrationId,
-      );
-      if (!registration?.attendance?.attended) {
-        throw new BadRequestException(
-          'Cannot complete POST assessment before attendance is marked',
-        );
-      }
+      await this.validatePostAssessmentCompletion(assessment.registrationId);
     }
 
     // Actualizar con los valores
@@ -97,6 +81,26 @@ export class WellnessAssessmentsService {
     });
 
     return this.findById(id);
+  }
+
+  private async validatePreAssessmentCompletion(registrationId: string): Promise<void> {
+    // PRE se puede completar en cualquier momento antes del evento
+    const registration = await this.registrationsRepository.findById(registrationId);
+    if (registration?.attendance?.attended) {
+      throw new BadRequestException(
+        'Cannot complete PRE assessment after attendance has been marked',
+      );
+    }
+  }
+
+  private async validatePostAssessmentCompletion(registrationId: string): Promise<void> {
+    // POST solo se puede completar después de marcar asistencia
+    const registration = await this.registrationsRepository.findById(registrationId);
+    if (!registration?.attendance?.attended) {
+      throw new BadRequestException(
+        'Cannot complete POST assessment before attendance is marked',
+      );
+    }
   }
 
   async getAssessmentsByRegistration(registrationId: string, userId: string) {
@@ -178,4 +182,3 @@ export class WellnessAssessmentsService {
     };
   }
 }
-

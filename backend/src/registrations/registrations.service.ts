@@ -10,6 +10,7 @@ import { EventsRepository } from '../events/events.repository';
 import { EventInstancesRepository } from '../event-instances/event-instances.repository';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { RegistrationWithRelations } from './interfaces/registrations.repository.interface';
+import { Event, EventInstance } from '@prisma/client';
 
 /**
  * RegistrationsService - Lógica de negocio para inscripciones a eventos
@@ -26,7 +27,7 @@ export class RegistrationsService {
     private readonly registrationsRepository: RegistrationsRepository,
     private readonly eventsRepository: EventsRepository,
     private readonly eventInstancesRepository: EventInstancesRepository,
-  ) {}
+  ) { }
 
   async create(
     userId: string,
@@ -34,34 +35,42 @@ export class RegistrationsService {
   ): Promise<RegistrationWithRelations> {
     const { eventId, eventInstanceId } = createRegistrationDto;
 
-    // Validar que el evento exista
+    const event = await this.validateEvent(eventId);
+    const instance = await this.validateInstance(eventInstanceId, eventId);
+
+    await this.validateUserNotRegistered(userId, eventInstanceId);
+    await this.validateCapacity(instance);
+
+    return this.registrationsRepository.create({ userId, eventId, eventInstanceId });
+  }
+
+  private async validateEvent(eventId: string): Promise<Event> {
     const event = await this.eventsRepository.findById(eventId);
     if (!event) {
       throw new NotFoundException(`Event with id ${eventId} not found`);
     }
 
-    // Validar que el evento esté activo
     if (!event.isActive) {
       throw new BadRequestException('Event is not active');
     }
 
-    // Validar que la instancia exista
-    const instance = await this.eventInstancesRepository.findById(eventInstanceId);
+    return event;
+  }
+
+  private async validateInstance(instanceId: string, eventId: string): Promise<EventInstance> {
+    const instance = await this.eventInstancesRepository.findById(instanceId);
     if (!instance) {
-      throw new NotFoundException(`Event instance with id ${eventInstanceId} not found`);
+      throw new NotFoundException(`Event instance with id ${instanceId} not found`);
     }
 
-    // Validar que la instancia pertenece al evento
-    if (instance.event.id !== eventId) {
+    if (instance.eventId !== eventId) {
       throw new BadRequestException('Event instance does not belong to the specified event');
     }
 
-    // Validar que la instancia esté activa
     if (!instance.isActive) {
       throw new BadRequestException('Event instance is not active');
     }
 
-    // Validar que la instancia no haya pasado
     const instanceDate = new Date(instance.dateTime);
     const now = new Date();
 
@@ -69,24 +78,26 @@ export class RegistrationsService {
       throw new BadRequestException('Cannot register for past event instances');
     }
 
-    // Validar que el usuario no esté ya inscrito en esta instancia específica
+    return instance;
+  }
+
+  private async validateUserNotRegistered(userId: string, instanceId: string): Promise<void> {
     const existingRegistration = await this.registrationsRepository.findByUserAndInstance(
       userId,
-      eventInstanceId,
+      instanceId,
     );
     if (existingRegistration) {
       throw new ConflictException('You are already registered for this event instance');
     }
+  }
 
-    // Validar capacidad disponible en la instancia
+  private async validateCapacity(instance: EventInstance): Promise<void> {
     const currentRegistrations = await this.registrationsRepository.countByEventInstanceId(
-      eventInstanceId,
+      instance.id,
     );
     if (currentRegistrations >= instance.capacity) {
       throw new BadRequestException('Event instance has reached maximum capacity');
     }
-
-    return this.registrationsRepository.create({ userId, eventId, eventInstanceId });
   }
 
   async findById(id: string): Promise<RegistrationWithRelations> {
