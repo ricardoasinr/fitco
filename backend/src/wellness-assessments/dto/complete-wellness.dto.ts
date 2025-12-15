@@ -17,7 +17,7 @@ export class CompleteWellnessDto {
 
   @IsNotEmpty({ message: 'Stress level is required' })
   @IsInt({ message: 'Stress level must be an integer' })
-  @Min(1, { message: 'Stress level must be at least 1' })
+  @Min(0, { message: 'Stress level must be at least 0' })
   @Max(10, { message: 'Stress level must be at most 10' })
   stressLevel: number;
 

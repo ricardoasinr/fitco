@@ -90,13 +90,16 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   return (
-    <div className={`event-card ${isEventPast ? 'past-event' : ''}`}>
+    <div className={`event-card ${isEventPast ? 'past-event' : ''} ${!event.isActive && isAdmin ? 'inactive-event' : ''}`}>
       <div className="event-header">
         <h3>{event.name}</h3>
         <div className="event-badges">
           <span className="event-type-badge">{event.exerciseType.name}</span>
           {isRecurring && (
             <span className="recurrence-badge">🔄 {instanceCount} fechas</span>
+          )}
+          {!event.isActive && isAdmin && (
+            <span className="inactive-badge">⏸️ Inactivo</span>
           )}
         </div>
       </div>
@@ -174,7 +177,9 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
       ) : isAuthenticated && !isEventPast ? (
         <div className="event-actions">
-          {isRegistered && registeredInstancesCount > 0 ? (
+          {!event.isActive ? (
+            <span className="inactive-status-badge">⏸️ Evento inactivo</span>
+          ) : isRegistered && registeredInstancesCount > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
               <span className="registered-badge">
                 ✅ Inscrito en {registeredInstancesCount} fecha{registeredInstancesCount > 1 ? 's' : ''}
@@ -191,9 +196,9 @@ const EventCard: React.FC<EventCardProps> = ({
             <button
               onClick={() => onRegister && onRegister(event)}
               className="btn-register"
-              disabled={isFull || !hasFutureInstances}
+              disabled={isFull || !hasFutureInstances || !event.isActive}
             >
-              {isFull || !hasFutureInstances ? 'Sin cupos' : '📝 Inscribirme'}
+              {!event.isActive ? 'Evento inactivo' : isFull || !hasFutureInstances ? 'Sin cupos' : '📝 Inscribirme'}
             </button>
           )}
         </div>
@@ -216,6 +221,26 @@ const EventCard: React.FC<EventCardProps> = ({
           border-radius: 4px;
           font-size: 0.75rem;
           font-weight: 500;
+        }
+        .inactive-badge {
+          background: #f8d7da;
+          color: #721c24;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+        .inactive-status-badge {
+          background: #fff3cd;
+          color: #856404;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          font-weight: 500;
+          display: inline-block;
+        }
+        .event-card.inactive-event {
+          opacity: 0.7;
+          border-left: 4px solid #dc3545;
         }
       `}</style>
     </div>

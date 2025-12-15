@@ -128,6 +128,11 @@ const Dashboard: React.FC = () => {
   };
 
   const handleRegisterClick = (event: Event) => {
+    // Validar que el evento esté activo
+    if (!event.isActive) {
+      setError('No se puede inscribir a un evento inactivo');
+      return;
+    }
     setSelectedEvent(event);
     setShowInstanceSelector(true);
     setError('');
@@ -255,14 +260,14 @@ const Dashboard: React.FC = () => {
               {/* Eventos Disponibles */}
               <div className="events-section">
                 <h2 className="section-title">📅 Eventos Disponibles</h2>
-                {events.length === 0 ? (
+                {visibleEvents.length === 0 ? (
                   <div className="empty-state-card">
                     <h3>📭 No hay eventos disponibles</h3>
                     <p>Vuelve pronto para ver nuevos eventos</p>
                   </div>
                 ) : (
                   <div className="events-grid">
-                    {events.map((event) => {
+                    {visibleEvents.map((event) => {
                       const registeredInstances = getRegisteredInstances(event.id);
                       return (
                         <EventCard

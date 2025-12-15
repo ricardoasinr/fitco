@@ -41,6 +41,13 @@ const InstanceSelector: React.FC<InstanceSelectorProps> = ({
       setLoading(true);
       setError('');
 
+      // Validar que el evento esté activo
+      if (!event.isActive) {
+        setError('No se puede inscribir a un evento inactivo');
+        setLoading(false);
+        return;
+      }
+
       // Obtener instancias disponibles
       const availableInstances = await eventsService.getAvailableInstances(event.id);
       
@@ -85,12 +92,19 @@ const InstanceSelector: React.FC<InstanceSelectorProps> = ({
   const handleFinalConfirm = async () => {
     if (!selectedInstance) return;
 
+    // Validar que el evento aún esté activo antes de confirmar
+    if (!event.isActive) {
+      setError('El evento está inactivo y no se puede completar la inscripción');
+      setShowConfirmModal(false);
+      return;
+    }
+
     setSubmitting(true);
     try {
       setShowConfirmModal(false);
       onSelect(selectedInstance);
     } catch (err: any) {
-      setError(err.message || 'Error al procesar la selección');
+      setError(err.response?.data?.message || err.message || 'Error al procesar la selección');
       setSubmitting(false);
     }
   };

@@ -77,6 +77,11 @@ const Events: React.FC = () => {
 
   // Cuando el usuario hace clic en inscribirse, mostramos el selector de instancias
   const handleRegisterClick = (event: Event) => {
+    // Validar que el evento esté activo
+    if (!event.isActive) {
+      setError('No se puede inscribir a un evento inactivo');
+      return;
+    }
     setSelectedEvent(event);
     setShowInstanceSelector(true);
     setError('');
