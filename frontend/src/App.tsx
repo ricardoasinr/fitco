@@ -12,6 +12,7 @@ import WellnessForm from './pages/WellnessForm';
 import WellnessImpact from './pages/WellnessImpact';
 import WellnessEvaluations from './pages/WellnessEvaluations';
 import AttendanceCheck from './pages/AttendanceCheck';
+import QRScanner from './pages/QRScanner';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -99,6 +100,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
                 <AttendanceCheck />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/scan-qr"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <QRScanner />
               </ProtectedRoute>
             }
           />

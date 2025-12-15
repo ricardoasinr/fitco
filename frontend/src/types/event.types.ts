@@ -204,6 +204,7 @@ export interface CompleteWellnessDto {
 }
 
 export interface MarkAttendanceDto {
+  registrationId?: string;
   qrCode?: string;
   email?: string;
   eventId?: string;

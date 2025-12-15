@@ -28,18 +28,25 @@ export class AttendanceService {
     adminId: string,
     markAttendanceDto: MarkAttendanceDto,
   ): Promise<AttendanceWithRegistration> {
-    const { qrCode, email, eventId } = markAttendanceDto;
+    const { registrationId, qrCode, email, eventId } = markAttendanceDto;
 
     let attendance: AttendanceWithRegistration | null = null;
 
+    // Buscar por registrationId (más preciso, recomendado)
+    if (registrationId) {
+      attendance = await this.attendanceRepository.findByRegistrationId(registrationId);
+      if (!attendance) {
+        throw new NotFoundException('Registration not found with the provided registration ID');
+      }
+    }
     // Buscar por QR code
-    if (qrCode) {
+    else if (qrCode) {
       attendance = await this.attendanceRepository.findByQrCode(qrCode);
       if (!attendance) {
         throw new NotFoundException('Registration not found with the provided QR code');
       }
     }
-    // Buscar por email y eventId
+    // Buscar por email y eventId (fallback)
     else if (email && eventId) {
       attendance = await this.attendanceRepository.findByUserEmail(email, eventId);
       if (!attendance) {
@@ -49,7 +56,7 @@ export class AttendanceService {
       }
     } else {
       throw new BadRequestException(
-        'Must provide either qrCode or both email and eventId',
+        'Must provide either registrationId, qrCode, or both email and eventId',
       );
     }
 

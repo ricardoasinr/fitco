@@ -36,12 +36,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onLogout }) => {
         </button>
 
         <button
-          className={`sidebar-item ${isActive('/admin/attendance') ? 'active' : ''}`}
-          onClick={() => navigate('/admin/events')}
-          title="Selecciona un evento para ver asistencia"
+          className={`sidebar-item ${isActive('/admin/scan-qr') ? 'active' : ''}`}
+          onClick={() => navigate('/admin/scan-qr')}
         >
-          <span className="sidebar-icon">✅</span>
-          <span>Asistencia</span>
+          <span className="sidebar-icon">📷</span>
+          <span>Escanear QR</span>
         </button>
 
         <button
