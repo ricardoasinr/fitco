@@ -41,15 +41,12 @@ Esta guía te ayudará a configurar y ejecutar el proyecto FITCO Wellness Platfo
 - ✅ Contraseñas hasheadas con bcrypt (salt rounds: 10)
 - ✅ Roles: ADMIN y USER
 
-### FASE 2 - Pendiente ⏳
+### FASE 2 - Terminada 🚧
 
-- ⏳ Unit Tests (mínimo 1)
-- ⏳ Integration Tests (mínimo 1)
-- ⏳ E2E Tests (mínimo 1)
-- ⏳ Coverage ≥85%
-- ⏳ Gestión de sesiones wellness
-- ⏳ Métricas pre y post sesión
-- ⏳ Reportes de impacto
+- 🚧 Unit Tests (Implementados en Attendance, Registrations, Users)
+- 🚧 Integration Tests (Configurados)
+- 🚧 E2E Tests (Configurados)
+- 🚧 Coverage (al 86.73%)
 
 ---
 
@@ -108,21 +105,25 @@ make --version   # GNU Make 3.x o superior
 git clone <repository-url>
 cd fitco
 
-# 2. Levantar base de datos
+# 2. Configurar variables de entorno
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# 3. Levantar base de datos
 make up
 
-# 3. Instalar dependencias
+# 4. Instalar dependencias
 make install
 
-# 4. Generar cliente de Prisma y ejecutar migraciones
+# 5. Generar cliente de Prisma y ejecutar migraciones
 cd backend
 npx prisma generate
 npx prisma migrate dev --name init
 
-# 5. Iniciar backend (Terminal 1)
+# 6. Iniciar backend (Terminal 1)
 make backend-dev
 
-# 6. Iniciar frontend (Terminal 2)
+# 7. Iniciar frontend (Terminal 2)
 make frontend-dev
 
 # ✅ Listo! Abre http://localhost:5173
@@ -167,7 +168,13 @@ cd ../frontend && npm install
 
 #### Backend
 
-El archivo `backend/.env` ya existe con valores por defecto:
+Copia el archivo de ejemplo:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+El archivo `backend/.env` debe contener:
 
 ```env
 DATABASE_URL=postgresql://fitco:fitco123@localhost:5434/fitco_db
@@ -182,11 +189,16 @@ NODE_ENV=development
 
 #### Frontend
 
-El frontend usa `http://localhost:3000` por defecto. Si necesitas cambiarlo:
+Copia el archivo de ejemplo:
 
 ```bash
-cd frontend
-echo "VITE_API_URL=http://localhost:3000" > .env
+cp frontend/.env.example frontend/.env
+```
+
+El frontend usa `http://localhost:3000` por defecto. Si necesitas cambiarlo:
+
+```env
+VITE_API_URL=http://localhost:3000
 ```
 
 ### 4. Configurar Prisma
