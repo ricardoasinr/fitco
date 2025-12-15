@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import Events from './pages/Events';
 import EventManagement from './pages/EventManagement';
+import ExerciseTypeManagement from './pages/ExerciseTypeManagement';
 import MyRegistrations from './pages/MyRegistrations';
 import WellnessForm from './pages/WellnessForm';
 import WellnessImpact from './pages/WellnessImpact';
@@ -82,6 +83,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['ADMIN']}>
                 <EventManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exercise-types"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ExerciseTypeManagement />
               </ProtectedRoute>
             }
           />

@@ -5,3 +5,4 @@ ALTER TABLE "registrations" DROP CONSTRAINT IF EXISTS "registrations_userId_even
 -- This allows users to register for multiple instances of the same event
 ALTER TABLE "registrations" ADD CONSTRAINT "registrations_userId_eventInstanceId_key" UNIQUE ("userId", "eventInstanceId");
 
+

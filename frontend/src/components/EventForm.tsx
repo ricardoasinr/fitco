@@ -12,6 +12,8 @@ interface EventFormProps {
   event?: Event | null;
   onSubmit: (data: CreateEventDto) => void;
   onCancel: () => void;
+  onDelete?: (id: string) => void;
+  onStatusChange?: (id: string, isActive: boolean) => void;
 }
 
 const WEEKDAYS = [
@@ -34,7 +36,7 @@ const WEEKDAYS = [
  * - Configurar recurrencia de eventos
  * - Enviar datos al componente padre
  */
-const EventForm: React.FC<EventFormProps> = ({ event, onSubmit, onCancel }) => {
+const EventForm: React.FC<EventFormProps> = ({ event, onSubmit, onCancel, onDelete, onStatusChange }) => {
   const [exerciseTypes, setExerciseTypes] = useState<ExerciseType[]>([]);
   const [formData, setFormData] = useState<CreateEventDto>({
     name: '',
@@ -169,11 +171,46 @@ const EventForm: React.FC<EventFormProps> = ({ event, onSubmit, onCancel }) => {
 
   const isEditing = !!event;
 
+  const handleDeleteClick = () => {
+    if (event && onDelete && confirm('¿Estás seguro de eliminar este evento? Esta acción no se puede deshacer.')) {
+      onDelete(event.id);
+    }
+  };
+
+  const handleStatusToggle = () => {
+    if (event && onStatusChange) {
+      onStatusChange(event.id, !event.isActive);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="event-form">
       <h3>{isEditing ? 'Editar Evento' : 'Crear Nuevo Evento'}</h3>
 
       {error && <div className="error-message">{error}</div>}
+
+      {isEditing && (
+        <div className="event-info-banner">
+          <div className="info-section">
+            <p><strong>📅 Fecha:</strong> {new Date(event!.startDate).toLocaleDateString('es-ES')}</p>
+            <p><strong>🕐 Hora:</strong> {event!.time}</p>
+            <p><strong>👥 Capacidad:</strong> {event!.capacity}</p>
+            <p><strong>🏋️ Tipo:</strong> {exerciseTypes.find(t => t.id === event!.exerciseTypeId)?.name || 'N/A'}</p>
+          </div>
+          <div className="status-section">
+            <label className="status-toggle">
+              <input
+                type="checkbox"
+                checked={event!.isActive}
+                onChange={handleStatusToggle}
+              />
+              <span className={`status-label ${event!.isActive ? 'active' : 'inactive'}`}>
+                {event!.isActive ? '✅ Activo' : '⏸️ Inactivo'}
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
 
       <div className="form-group">
         <label htmlFor="name">Nombre del Evento *</label>
@@ -201,6 +238,9 @@ const EventForm: React.FC<EventFormProps> = ({ event, onSubmit, onCancel }) => {
         />
       </div>
 
+      {/* Solo mostrar campos adicionales al crear */}
+      {!isEditing && (
+        <>
       {/* Toggle Recurrencia - Solo al crear */}
       {!isEditing && (
         <div className="form-group recurrence-toggle">
@@ -368,16 +408,99 @@ const EventForm: React.FC<EventFormProps> = ({ event, onSubmit, onCancel }) => {
         </div>
       </div>
 
+      </>
+      )}
+
       <div className="form-actions">
-        <button type="button" onClick={onCancel} className="btn-secondary">
-          Cancelar
-        </button>
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear'}
-        </button>
+        <div className="left-actions">
+          {isEditing && onDelete && (
+            <button 
+              type="button" 
+              onClick={handleDeleteClick} 
+              className="btn-danger"
+            >
+              🗑️ Eliminar
+            </button>
+          )}
+        </div>
+        <div className="right-actions">
+          <button type="button" onClick={onCancel} className="btn-secondary">
+            Cancelar
+          </button>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear'}
+          </button>
+        </div>
       </div>
 
       <style>{`
+        .event-info-banner {
+          background: #f8f9fa;
+          padding: 1rem;
+          border-radius: 8px;
+          margin-bottom: 1.5rem;
+          border-left: 4px solid #17a2b8;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+        }
+        .info-section p {
+          margin: 0.25rem 0;
+          color: #495057;
+        }
+        .status-section {
+          display: flex;
+          align-items: center;
+        }
+        .status-toggle {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+        .status-toggle input {
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+        }
+        .status-label {
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          font-weight: 500;
+        }
+        .status-label.active {
+          background: #d4edda;
+          color: #155724;
+        }
+        .status-label.inactive {
+          background: #f8d7da;
+          color: #721c24;
+        }
+        .form-actions {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          margin-top: 1.5rem;
+        }
+        .left-actions, .right-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+        .btn-danger {
+          padding: 0.75rem 1.5rem;
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .btn-danger:hover {
+          background: #c82333;
+        }
         .recurrence-toggle {
           background: #f8f9fa;
           padding: 1rem;

@@ -65,7 +65,7 @@ export class AttendanceService {
 
     if (!preAssessment || preAssessment.status !== 'COMPLETED') {
       throw new BadRequestException(
-        'PRE wellness assessment must be completed before marking attendance',
+        'El usuario no ha completado la evaluación PRE.',
       );
     }
 
@@ -130,4 +130,5 @@ export class AttendanceService {
     };
   }
 }
+
 

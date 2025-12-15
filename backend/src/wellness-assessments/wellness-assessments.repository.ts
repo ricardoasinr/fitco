@@ -104,6 +104,19 @@ export class WellnessAssessmentsRepository implements IWellnessAssessmentsReposi
     });
   }
 
+  async findCompletedByUserId(userId: string): Promise<WellnessAssessmentWithRegistration[]> {
+    return this.prisma.wellnessAssessment.findMany({
+      where: {
+        status: WellnessStatus.COMPLETED,
+        registration: {
+          userId,
+        },
+      },
+      include: this.includeRelations,
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
   async update(
     id: string,
     data: UpdateWellnessAssessmentData,

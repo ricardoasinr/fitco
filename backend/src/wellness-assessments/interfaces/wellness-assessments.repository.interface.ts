@@ -53,5 +53,6 @@ export interface IWellnessAssessmentsRepository {
     type: WellnessType,
   ): Promise<WellnessAssessmentWithRegistration | null>;
   findPendingByUserId(userId: string): Promise<WellnessAssessmentWithRegistration[]>;
+  findCompletedByUserId(userId: string): Promise<WellnessAssessmentWithRegistration[]>;
   update(id: string, data: UpdateWellnessAssessmentData): Promise<WellnessAssessment>;
 }

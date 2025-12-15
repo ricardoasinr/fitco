@@ -30,6 +30,14 @@ export const wellnessService = {
   },
 
   /**
+   * Obtener todas las evaluaciones completadas con detalles (USER)
+   */
+  getCompletedEvaluations: async (): Promise<WellnessAssessment[]> => {
+    const response = await api.get<WellnessAssessment[]>('/wellness/completed');
+    return response.data;
+  },
+
+  /**
    * Obtener evaluación por ID
    */
   getById: async (id: string): Promise<WellnessAssessment> => {

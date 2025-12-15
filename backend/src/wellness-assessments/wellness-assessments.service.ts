@@ -32,6 +32,10 @@ export class WellnessAssessmentsService {
     return this.wellnessRepository.findPendingByUserId(userId);
   }
 
+  async findCompletedByUser(userId: string): Promise<WellnessAssessmentWithRegistration[]> {
+    return this.wellnessRepository.findCompletedByUserId(userId);
+  }
+
   async findById(id: string): Promise<WellnessAssessmentWithRegistration> {
     const assessment = await this.wellnessRepository.findById(id);
     if (!assessment) {

@@ -45,6 +45,23 @@
   color: white;
 }
 
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: #f39c12;
+  color: white;
+}
+
+.status-badge.completed {
+  background: #27ae60;
+  color: white;
+}
+
 .evaluation-event-info {
   margin-bottom: 20px;
 }
@@ -219,6 +236,149 @@
 
 .btn-back:hover {
   background: #d5dbdb;
+}
+
+.wellness-evaluations-section {
+  margin-bottom: 40px;
+}
+
+.evaluations-subsection {
+  margin-bottom: 30px;
+}
+
+.subsection-title {
+  font-size: 22px;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.wellness-evaluation-card.completed {
+  border: 2px solid #27ae60;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.evaluation-metrics {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.metric-item:last-child {
+  border-bottom: none;
+}
+
+.metric-label {
+  color: #7f8c8d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.metric-value {
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.evaluation-completed-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  color: #7f8c8d;
+  font-size: 12px;
+}
+
+.evaluation-event-info h4 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.evaluation-impact-summary {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.impact-metric-item {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.impact-metric-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.impact-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.impact-values {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.impact-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 24px;
+  text-align: center;
+}
+
+.impact-arrow {
+  font-size: 18px;
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+.impact-change {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.impact-change.positive {
+  color: #27ae60;
+  background: #d5f4e6;
+}
+
+.impact-change.negative {
+  color: #e74c3c;
+  background: #fadbd8;
+}
+
+.impact-note {
+  font-size: 11px;
+  font-weight: 400;
+  color: #7f8c8d;
+  font-style: italic;
 }
 
 /* Responsive */

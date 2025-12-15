@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Event, CreateEventDto } from '../types/event.types';
 import { eventsService } from '../services/events.service';
+import AdminSidebar from '../components/AdminSidebar';
 import EventCard from '../components/EventCard';
 import EventForm from '../components/EventForm';
-import ExerciseTypeManager from '../components/ExerciseTypeManager';
 import '../styles/Dashboard.css';
 
 /**
@@ -24,7 +24,6 @@ const EventManagement: React.FC = () => {
   const [error, setError] = useState('');
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [activeTab, setActiveTab] = useState<'events' | 'types'>('events');
 
   useEffect(() => {
     loadEvents();
@@ -76,13 +75,22 @@ const EventManagement: React.FC = () => {
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este evento?')) return;
-
     try {
       await eventsService.delete(id);
       await loadEvents();
+      setShowEventForm(false);
+      setEditingEvent(null);
     } catch (error: any) {
       setError(error.response?.data?.message || 'Error al eliminar evento');
+    }
+  };
+
+  const handleStatusChange = async (id: string, isActive: boolean) => {
+    try {
+      await eventsService.update(id, { isActive });
+      await loadEvents();
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Error al cambiar estado del evento');
     }
   };
 
@@ -101,47 +109,19 @@ const EventManagement: React.FC = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <div className="dashboard-logo">
-          <h1>👑 Gestión de Eventos</h1>
-          <span className="role-badge role-admin">ADMIN</span>
-        </div>
-        <div className="header-actions">
-          <button onClick={() => navigate('/events')} className="btn-secondary">
-            Ver Eventos Públicos
-          </button>
-          <button onClick={() => navigate('/dashboard')} className="btn-secondary">
-            Dashboard
-          </button>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
-        </div>
-      </div>
+    <div className="layout-with-sidebar">
+      <AdminSidebar onLogout={handleLogout} />
+      
+      <div className="main-content">
+        <div className="dashboard-content-wrapper">
+          <div className="welcome-section">
+            <h1 className="welcome-title">Gestión de Eventos</h1>
+          </div>
 
-      <div className="dashboard-content">
-        {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message">{error}</div>}
 
-        <div className="tabs">
-          <button
-            className={`tab ${activeTab === 'events' ? 'active' : ''}`}
-            onClick={() => setActiveTab('events')}
-          >
-            📅 Eventos
-          </button>
-          <button
-            className={`tab ${activeTab === 'types' ? 'active' : ''}`}
-            onClick={() => setActiveTab('types')}
-          >
-            🏋️ Tipos de Ejercicio
-          </button>
-        </div>
-
-        {activeTab === 'events' && (
-          <div className="tab-content">
-            <div className="section-header">
-              <h3>Gestión de Eventos</h3>
+          <div className="admin-section-content">
+            <div className="admin-section-header">
               <button
                 onClick={() => {
                   setEditingEvent(null);
@@ -159,6 +139,8 @@ const EventManagement: React.FC = () => {
                   event={editingEvent}
                   onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
                   onCancel={handleCancelForm}
+                  onDelete={editingEvent ? handleDeleteEvent : undefined}
+                  onStatusChange={editingEvent ? handleStatusChange : undefined}
                 />
               </div>
             )}
@@ -185,14 +167,54 @@ const EventManagement: React.FC = () => {
               </div>
             )}
           </div>
-        )}
-
-        {activeTab === 'types' && (
-          <div className="tab-content">
-            <ExerciseTypeManager />
-          </div>
-        )}
+        </div>
       </div>
+
+      <style>{`
+        .admin-section-content {
+          animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .admin-section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          padding: 1rem;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .admin-section-header h2 {
+          margin: 0;
+          color: #2c3e50;
+          font-size: 1.5rem;
+        }
+        .form-container {
+          background: white;
+          border-radius: 10px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+          margin-bottom: 1.5rem;
+        }
+        .empty-state {
+          text-align: center;
+          padding: 3rem;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .empty-state h3 {
+          color: #6c757d;
+          margin: 0 0 0.5rem 0;
+        }
+        .empty-state p {
+          color: #adb5bd;
+        }
+      `}</style>
     </div>
   );
 };

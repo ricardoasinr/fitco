@@ -29,6 +29,7 @@ interface RequestUser {
  * 
  * Endpoints:
  * - GET /wellness/pending - Obtener mis evaluaciones pendientes (USER)
+ * - GET /wellness/completed - Obtener mis evaluaciones completadas (USER)
  * - GET /wellness/:id - Obtener evaluación por ID
  * - POST /wellness/:id/complete - Completar evaluación (USER)
  * - GET /wellness/registration/:registrationId - Evaluaciones de una inscripción
@@ -43,6 +44,12 @@ export class WellnessAssessmentsController {
   @Roles(Role.USER, Role.ADMIN)
   async findPending(@CurrentUser() user: RequestUser) {
     return this.wellnessService.findPendingByUser(user.id);
+  }
+
+  @Get('completed')
+  @Roles(Role.USER, Role.ADMIN)
+  async findCompleted(@CurrentUser() user: RequestUser) {
+    return this.wellnessService.findCompletedByUser(user.id);
   }
 
   @Get('registration/:registrationId')

@@ -28,3 +28,4 @@ export class CompleteWellnessDto {
   mood: number;
 }
 
+
