@@ -5,15 +5,17 @@ import { Event, Registration } from '../types/event.types';
 import { eventsService } from '../services/events.service';
 import { registrationsService } from '../services/registrations.service';
 import EventCard from '../components/EventCard';
+import InstanceSelector from '../components/InstanceSelector';
 import '../styles/Dashboard.css';
 
 /**
  * Events - Página pública para visualizar eventos disponibles
- * 
+ *
  * Responsabilidades:
  * - Mostrar lista de eventos disponibles
  * - Filtrar eventos por tipo (opcional)
- * - Permitir inscripción a eventos
+ * - Permitir inscripción a eventos con selección de instancia
+ * - Permitir múltiples inscripciones al mismo evento (diferentes instancias)
  * - Permitir navegación según rol del usuario
  */
 const Events: React.FC = () => {
@@ -25,6 +27,10 @@ const Events: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  
+  // Estado para el selector de instancias
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showInstanceSelector, setShowInstanceSelector] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -40,9 +46,9 @@ const Events: React.FC = () => {
     try {
       setLoading(true);
       const data = await eventsService.getAll();
-      // Ordenar por fecha
-      const sortedEvents = data.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+      // Ordenar por fecha de inicio
+      const sortedEvents = data.sort(
+        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
       );
       setEvents(sortedEvents);
       setError('');
@@ -67,32 +73,54 @@ const Events: React.FC = () => {
     navigate('/');
   };
 
-  const handleRegister = async (eventId: string) => {
+  // Cuando el usuario hace clic en inscribirse, mostramos el selector de instancias
+  const handleRegisterClick = (event: Event) => {
+    setSelectedEvent(event);
+    setShowInstanceSelector(true);
+    setError('');
+    setSuccess('');
+  };
+
+  // Cuando el usuario selecciona una instancia
+  const handleInstanceSelect = async (instanceId: string) => {
+    if (!selectedEvent) return;
+
     try {
       setError('');
-      setSuccess('');
-      await registrationsService.register(eventId);
+      await registrationsService.register(selectedEvent.id, instanceId);
       setSuccess('✅ ¡Inscripción exitosa! Ahora completa tu evaluación PRE-evento.');
+      setShowInstanceSelector(false);
+      setSelectedEvent(null);
       await Promise.all([loadEvents(), loadMyRegistrations()]);
       // Redirigir a mis inscripciones después de 2 segundos
       setTimeout(() => navigate('/my-registrations'), 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al inscribirse');
+      setShowInstanceSelector(false);
     }
+  };
+
+  const handleCancelInstanceSelection = () => {
+    setShowInstanceSelector(false);
+    setSelectedEvent(null);
   };
 
   const handleAttendance = (eventId: string) => {
     navigate(`/admin/attendance/${eventId}`);
   };
 
-  const isRegisteredForEvent = (eventId: string) => {
-    return myRegistrations.some(reg => reg.eventId === eventId);
+  // Verificar si el usuario está inscrito en alguna instancia de este evento
+  const getRegisteredInstances = (eventId: string): string[] => {
+    return myRegistrations
+      .filter((reg) => reg.eventId === eventId)
+      .map((reg) => reg.eventInstanceId);
   };
 
-  const uniqueTypes = Array.from(new Set(events.map(e => e.exerciseType.name)));
-  const filteredEvents = filterType === 'all' 
-    ? events 
-    : events.filter(e => e.exerciseType.name === filterType);
+  const uniqueTypes = Array.from(new Set(events.map((e) => e.exerciseType.name)));
+  const filteredEvents =
+    filterType === 'all'
+      ? events
+      : events.filter((e) => e.exerciseType.name === filterType);
 
   return (
     <div className="dashboard-container">
@@ -105,11 +133,17 @@ const Events: React.FC = () => {
           {isAuthenticated ? (
             <>
               {user?.role === 'USER' && (
-                <button onClick={() => navigate('/my-registrations')} className="btn-secondary">
+                <button
+                  onClick={() => navigate('/my-registrations')}
+                  className="btn-secondary"
+                >
                   🎫 Mis Inscripciones
                 </button>
               )}
-              <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="btn-secondary"
+              >
                 Dashboard
               </button>
               <button onClick={handleLogout} className="btn-logout">
@@ -139,14 +173,16 @@ const Events: React.FC = () => {
           {uniqueTypes.length > 0 && (
             <div className="filter-section">
               <label>Filtrar por tipo:</label>
-              <select 
-                value={filterType} 
+              <select
+                value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 className="filter-select"
               >
                 <option value="all">Todos</option>
-                {uniqueTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {uniqueTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
             </div>
@@ -161,28 +197,36 @@ const Events: React.FC = () => {
         ) : filteredEvents.length === 0 ? (
           <div className="empty-state">
             <h3>📭 No hay eventos disponibles</h3>
-            <p>{filterType !== 'all' ? 'Intenta con otro filtro' : 'Vuelve pronto para ver nuevos eventos'}</p>
+            <p>
+              {filterType !== 'all'
+                ? 'Intenta con otro filtro'
+                : 'Vuelve pronto para ver nuevos eventos'}
+            </p>
           </div>
         ) : (
           <div className="events-grid">
-            {filteredEvents.map(event => (
-              <EventCard 
-                key={event.id} 
-                event={event}
-                isAdmin={user?.role === 'ADMIN'}
-                isAuthenticated={isAuthenticated}
-                isRegistered={isRegisteredForEvent(event.id)}
-                onRegister={handleRegister}
-                onAttendance={handleAttendance}
-              />
-            ))}
+            {filteredEvents.map((event) => {
+              const registeredInstances = getRegisteredInstances(event.id);
+              return (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isAdmin={user?.role === 'ADMIN'}
+                  isAuthenticated={isAuthenticated}
+                  isRegistered={registeredInstances.length > 0}
+                  registeredInstancesCount={registeredInstances.length}
+                  onRegister={handleRegisterClick}
+                  onAttendance={handleAttendance}
+                />
+              );
+            })}
           </div>
         )}
 
         {isAuthenticated && user?.role === 'ADMIN' && (
           <div className="admin-actions">
-            <button 
-              onClick={() => navigate('/admin/events')} 
+            <button
+              onClick={() => navigate('/admin/events')}
               className="btn-primary btn-large"
             >
               👑 Gestionar Eventos
@@ -190,9 +234,18 @@ const Events: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de selección de instancia */}
+      {showInstanceSelector && selectedEvent && (
+        <InstanceSelector
+          event={selectedEvent}
+          onSelect={handleInstanceSelect}
+          onCancel={handleCancelInstanceSelection}
+          excludeInstanceIds={getRegisteredInstances(selectedEvent.id)}
+        />
+      )}
     </div>
   );
 };
 
 export default Events;
-

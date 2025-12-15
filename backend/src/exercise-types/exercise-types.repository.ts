@@ -19,9 +19,12 @@ import { IExerciseTypesRepository } from './interfaces/exercise-types.repository
 export class ExerciseTypesRepository implements IExerciseTypesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateExerciseTypeDto): Promise<ExerciseType> {
+  async create(data: CreateExerciseTypeDto, userId: string): Promise<ExerciseType> {
     return this.prisma.exerciseType.create({
-      data,
+      data: {
+        ...data,
+        createdBy: userId,
+      },
     });
   }
 

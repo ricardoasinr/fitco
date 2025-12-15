@@ -1,9 +1,9 @@
 import api from './api';
-import { Event, CreateEventDto, UpdateEventDto } from '../types/event.types';
+import { Event, CreateEventDto, UpdateEventDto, EventInstance } from '../types/event.types';
 
 /**
  * EventsService - Servicio para gestión de eventos
- * 
+ *
  * Responsabilidades:
  * - Comunicación con el backend para operaciones CRUD de eventos
  * - Manejo de peticiones HTTP
@@ -48,5 +48,40 @@ export const eventsService = {
   delete: async (id: string): Promise<void> => {
     await api.delete(`/events/${id}`);
   },
-};
 
+  /**
+   * Obtener instancias de un evento
+   */
+  getInstances: async (eventId: string): Promise<EventInstance[]> => {
+    const response = await api.get<EventInstance[]>(`/event-instances/event/${eventId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtener instancias disponibles de un evento (futuras y con cupo)
+   */
+  getAvailableInstances: async (eventId: string): Promise<EventInstance[]> => {
+    const response = await api.get<EventInstance[]>(`/event-instances/event/${eventId}/available`);
+    return response.data;
+  },
+
+  /**
+   * Obtener una instancia por ID
+   */
+  getInstanceById: async (instanceId: string): Promise<EventInstance> => {
+    const response = await api.get<EventInstance>(`/event-instances/${instanceId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtener disponibilidad de una instancia
+   */
+  getInstanceAvailability: async (instanceId: string): Promise<{
+    capacity: number;
+    registered: number;
+    available: number;
+  }> => {
+    const response = await api.get(`/event-instances/${instanceId}/availability`);
+    return response.data;
+  },
+};

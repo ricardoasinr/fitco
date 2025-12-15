@@ -9,7 +9,7 @@ import {
 
 /**
  * RegistrationsRepository - Implementa el patrón Repository
- * 
+ *
  * Responsabilidades (Single Responsibility Principle):
  * - Abstrae el acceso a datos de inscripciones
  * - Encapsula la lógica de persistencia con Prisma
@@ -25,7 +25,8 @@ export class RegistrationsRepository implements IRegistrationsRepository {
         id: true,
         name: true,
         description: true,
-        date: true,
+        startDate: true,
+        endDate: true,
         time: true,
         capacity: true,
         isActive: true,
@@ -35,6 +36,14 @@ export class RegistrationsRepository implements IRegistrationsRepository {
             name: true,
           },
         },
+      },
+    },
+    eventInstance: {
+      select: {
+        id: true,
+        dateTime: true,
+        capacity: true,
+        isActive: true,
       },
     },
     user: {
@@ -59,6 +68,7 @@ export class RegistrationsRepository implements IRegistrationsRepository {
         data: {
           userId: data.userId,
           eventId: data.eventId,
+          eventInstanceId: data.eventInstanceId,
         },
       });
 
@@ -105,11 +115,24 @@ export class RegistrationsRepository implements IRegistrationsRepository {
     userId: string,
     eventId: string,
   ): Promise<RegistrationWithRelations | null> {
+    return this.prisma.registration.findFirst({
+      where: {
+        userId,
+        eventId,
+      },
+      include: this.includeRelations,
+    });
+  }
+
+  async findByUserAndInstance(
+    userId: string,
+    eventInstanceId: string,
+  ): Promise<RegistrationWithRelations | null> {
     return this.prisma.registration.findUnique({
       where: {
-        userId_eventId: {
+        userId_eventInstanceId: {
           userId,
-          eventId,
+          eventInstanceId,
         },
       },
       include: this.includeRelations,
@@ -132,9 +155,25 @@ export class RegistrationsRepository implements IRegistrationsRepository {
     });
   }
 
+  async findByEventInstanceId(
+    eventInstanceId: string,
+  ): Promise<RegistrationWithRelations[]> {
+    return this.prisma.registration.findMany({
+      where: { eventInstanceId },
+      include: this.includeRelations,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async countByEventId(eventId: string): Promise<number> {
     return this.prisma.registration.count({
       where: { eventId },
+    });
+  }
+
+  async countByEventInstanceId(eventInstanceId: string): Promise<number> {
+    return this.prisma.registration.count({
+      where: { eventInstanceId },
     });
   }
 
@@ -144,4 +183,3 @@ export class RegistrationsRepository implements IRegistrationsRepository {
     });
   }
 }
-

@@ -3,33 +3,35 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Event } from '@prisma/client';
+import { Event, RecurrenceType } from '@prisma/client';
 import { EventsRepository } from './events.repository';
 import { ExerciseTypesService } from '../exercise-types/exercise-types.service';
+import { EventInstancesService } from '../event-instances/event-instances.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { EventWithExerciseType } from './interfaces/events.repository.interface';
+import { EventWithRelations } from './interfaces/events.repository.interface';
 
 /**
  * EventsService - Lógica de negocio para gestión de eventos
- * 
+ *
  * Responsabilidades (Single Responsibility Principle):
  * - Lógica de negocio de eventos
  * - Validaciones de reglas de negocio
+ * - Generación automática de instancias para eventos recurrentes
  * - Coordinación entre repository y otras capas
- * 
- * No maneja:
- * - Persistencia directa (delegado al Repository)
- * - Validación de DTOs (delegado a ValidationPipe)
  */
 @Injectable()
 export class EventsService {
   constructor(
     private readonly eventsRepository: EventsRepository,
     private readonly exerciseTypesService: ExerciseTypesService,
+    private readonly eventInstancesService: EventInstancesService,
   ) {}
 
-  async create(createEventDto: CreateEventDto): Promise<EventWithExerciseType> {
+  async create(
+    createEventDto: CreateEventDto,
+    userId: string,
+  ): Promise<EventWithRelations> {
     // Validar nombre no vacío
     if (!createEventDto.name.trim()) {
       throw new BadRequestException('Name cannot be empty');
@@ -40,13 +42,51 @@ export class EventsService {
       throw new BadRequestException('Capacity must be at least 1');
     }
 
-    // Validar fecha no en el pasado
-    const eventDate = new Date(createEventDto.date);
+    // Validar fechas
+    const startDate = new Date(createEventDto.startDate);
+    const endDate = new Date(createEventDto.endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (eventDate < today) {
+    if (startDate < today) {
       throw new BadRequestException('Cannot create events in the past');
+    }
+
+    if (endDate < startDate) {
+      throw new BadRequestException('End date cannot be before start date');
+    }
+
+    // Validar patrón de recurrencia
+    const recurrenceType = createEventDto.recurrenceType || RecurrenceType.SINGLE;
+    if (recurrenceType === RecurrenceType.WEEKLY) {
+      if (
+        !createEventDto.recurrencePattern?.weekdays ||
+        createEventDto.recurrencePattern.weekdays.length === 0
+      ) {
+        throw new BadRequestException(
+          'Weekly recurrence requires at least one weekday',
+        );
+      }
+      // Validar que los días estén entre 0 y 6
+      const invalidDays = createEventDto.recurrencePattern.weekdays.filter(
+        (d) => d < 0 || d > 6,
+      );
+      if (invalidDays.length > 0) {
+        throw new BadRequestException(
+          'Weekdays must be between 0 (Sunday) and 6 (Saturday)',
+        );
+      }
+    }
+
+    if (recurrenceType === RecurrenceType.INTERVAL) {
+      if (
+        !createEventDto.recurrencePattern?.intervalDays ||
+        createEventDto.recurrencePattern.intervalDays < 1
+      ) {
+        throw new BadRequestException(
+          'Interval recurrence requires intervalDays >= 1',
+        );
+      }
     }
 
     // Validar que el ExerciseType exista y esté activo
@@ -58,14 +98,43 @@ export class EventsService {
       throw new BadRequestException('Exercise type is not active');
     }
 
-    return this.eventsRepository.create(createEventDto);
+    // Crear el evento
+    const event = await this.eventsRepository.create(createEventDto, userId);
+
+    // Generar instancias automáticamente
+    const instanceDates = this.eventInstancesService.generateInstanceDates(
+      startDate,
+      endDate,
+      createEventDto.time,
+      recurrenceType,
+      createEventDto.recurrencePattern || null,
+    );
+
+    if (instanceDates.length === 0) {
+      throw new BadRequestException(
+        'No instances would be generated with the given recurrence pattern',
+      );
+    }
+
+    await this.eventInstancesService.createInstancesForEvent(
+      event.id,
+      instanceDates,
+      createEventDto.capacity,
+    );
+
+    // Retornar evento con instancias
+    return this.eventsRepository.findById(event.id) as Promise<EventWithRelations>;
   }
 
-  async findAll(): Promise<EventWithExerciseType[]> {
+  async findAll(): Promise<EventWithRelations[]> {
     return this.eventsRepository.findAll();
   }
 
-  async findById(id: string): Promise<EventWithExerciseType> {
+  async findAllActive(): Promise<EventWithRelations[]> {
+    return this.eventsRepository.findAllActive();
+  }
+
+  async findById(id: string): Promise<EventWithRelations> {
     const event = await this.eventsRepository.findById(id);
 
     if (!event) {
@@ -78,7 +147,7 @@ export class EventsService {
   async update(
     id: string,
     updateEventDto: UpdateEventDto,
-  ): Promise<EventWithExerciseType> {
+  ): Promise<EventWithRelations> {
     const event = await this.eventsRepository.findById(id);
 
     if (!event) {
@@ -95,14 +164,22 @@ export class EventsService {
       throw new BadRequestException('Capacity must be at least 1');
     }
 
-    // Validar fecha no en el pasado si se actualiza
-    if (updateEventDto.date !== undefined) {
-      const eventDate = new Date(updateEventDto.date);
+    // Validar fechas si se actualizan
+    if (updateEventDto.startDate !== undefined) {
+      const startDate = new Date(updateEventDto.startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (eventDate < today) {
-        throw new BadRequestException('Cannot set event date to the past');
+      if (startDate < today) {
+        throw new BadRequestException('Cannot set start date to the past');
+      }
+    }
+
+    if (updateEventDto.endDate !== undefined && updateEventDto.startDate !== undefined) {
+      const startDate = new Date(updateEventDto.startDate);
+      const endDate = new Date(updateEventDto.endDate);
+      if (endDate < startDate) {
+        throw new BadRequestException('End date cannot be before start date');
       }
     }
 
@@ -117,12 +194,15 @@ export class EventsService {
       }
     }
 
-    // Convertir date de string a Date si está presente
-    const { date, ...rest } = updateEventDto;
-    const updateData: Partial<Event> = { ...rest };
-    if (date !== undefined) {
-      updateData.date = new Date(date);
-    }
+    // Preparar datos para actualización
+    const updateData: Partial<Event> = {};
+    if (updateEventDto.name !== undefined) updateData.name = updateEventDto.name;
+    if (updateEventDto.description !== undefined) updateData.description = updateEventDto.description;
+    if (updateEventDto.startDate !== undefined) updateData.startDate = new Date(updateEventDto.startDate);
+    if (updateEventDto.endDate !== undefined) updateData.endDate = new Date(updateEventDto.endDate);
+    if (updateEventDto.time !== undefined) updateData.time = updateEventDto.time;
+    if (updateEventDto.capacity !== undefined) updateData.capacity = updateEventDto.capacity;
+    if (updateEventDto.exerciseTypeId !== undefined) updateData.exerciseTypeId = updateEventDto.exerciseTypeId;
 
     return this.eventsRepository.update(id, updateData);
   }
@@ -137,4 +217,3 @@ export class EventsService {
     await this.eventsRepository.delete(id);
   }
 }
-

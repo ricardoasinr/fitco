@@ -7,7 +7,7 @@ import {
 
 /**
  * AttendanceRepository - Implementa el patrón Repository
- * 
+ *
  * Responsabilidades (Single Responsibility Principle):
  * - Abstrae el acceso a datos de asistencia
  * - Encapsula la lógica de persistencia con Prisma
@@ -22,6 +22,7 @@ export class AttendanceRepository implements IAttendanceRepository {
         id: true,
         userId: true,
         eventId: true,
+        eventInstanceId: true,
         qrCode: true,
         user: {
           select: {
@@ -34,8 +35,14 @@ export class AttendanceRepository implements IAttendanceRepository {
           select: {
             id: true,
             name: true,
-            date: true,
+            startDate: true,
             time: true,
+          },
+        },
+        eventInstance: {
+          select: {
+            id: true,
+            dateTime: true,
           },
         },
         wellnessAssessments: {
@@ -142,4 +149,3 @@ export class AttendanceRepository implements IAttendanceRepository {
     });
   }
 }
-

@@ -177,8 +177,11 @@ const AttendanceCheck: React.FC = () => {
         {event && (
           <div className="welcome-card">
             <h2>{event.name}</h2>
-            <p>📅 {formatDate(event.date)} | 🕐 {event.time}</p>
+            <p>📅 {formatDate(event.startDate)} | 🕐 {event.time}</p>
             <p>🏋️ {event.exerciseType.name} | 👥 Capacidad: {event.capacity}</p>
+            {event.recurrenceType !== 'SINGLE' && (
+              <p>🔄 Evento recurrente: {event._count?.instances || 0} fechas</p>
+            )}
           </div>
         )}
 

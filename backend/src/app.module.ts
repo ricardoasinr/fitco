@@ -12,6 +12,7 @@ import { ExerciseTypesModule } from './exercise-types/exercise-types.module';
 import { RegistrationsModule } from './registrations/registrations.module';
 import { WellnessAssessmentsModule } from './wellness-assessments/wellness-assessments.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { EventInstancesModule } from './event-instances/event-instances.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     UsersModule,
     AuthModule,
     EventsModule,
+    EventInstancesModule,
     ExerciseTypesModule,
     RegistrationsModule,
     WellnessAssessmentsModule,

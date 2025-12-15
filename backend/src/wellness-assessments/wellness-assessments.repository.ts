@@ -10,7 +10,7 @@ import {
 
 /**
  * WellnessAssessmentsRepository - Implementa el patrón Repository
- * 
+ *
  * Responsabilidades (Single Responsibility Principle):
  * - Abstrae el acceso a datos de evaluaciones de bienestar
  * - Encapsula la lógica de persistencia con Prisma
@@ -25,13 +25,20 @@ export class WellnessAssessmentsRepository implements IWellnessAssessmentsReposi
         id: true,
         userId: true,
         eventId: true,
+        eventInstanceId: true,
         qrCode: true,
         event: {
           select: {
             id: true,
             name: true,
-            date: true,
+            startDate: true,
             time: true,
+          },
+        },
+        eventInstance: {
+          select: {
+            id: true,
+            dateTime: true,
           },
         },
         user: {
@@ -107,4 +114,3 @@ export class WellnessAssessmentsRepository implements IWellnessAssessmentsReposi
     });
   }
 }
-

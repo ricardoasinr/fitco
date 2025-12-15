@@ -15,6 +15,17 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+
+/**
+ * User object from JWT strategy validation
+ */
+interface RequestUser {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+}
 
 /**
  * EventsController - Manejo de endpoints de eventos
@@ -36,8 +47,11 @@ export class EventsController {
   @Post()
   @Roles(Role.ADMIN)
   @UseGuards(RolesGuard)
-  create(@Body() createEventDto: CreateEventDto) {
-    return this.eventsService.create(createEventDto);
+  create(
+    @Body() createEventDto: CreateEventDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.eventsService.create(createEventDto, user.id);
   }
 
   @Public()

@@ -10,7 +10,7 @@ import '../styles/Dashboard.css';
 
 /**
  * EventManagement - Página de administración de eventos (ADMIN only)
- * 
+ *
  * Responsabilidades:
  * - Gestión completa de eventos (CRUD)
  * - Gestión de tipos de ejercicio
@@ -34,8 +34,8 @@ const EventManagement: React.FC = () => {
     try {
       setLoading(true);
       const data = await eventsService.getAll();
-      const sortedEvents = data.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+      const sortedEvents = data.sort(
+        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
       );
       setEvents(sortedEvents);
       setError('');
@@ -59,7 +59,7 @@ const EventManagement: React.FC = () => {
 
   const handleUpdateEvent = async (data: CreateEventDto) => {
     if (!editingEvent) return;
-    
+
     try {
       await eventsService.update(editingEvent.id, data);
       await loadEvents();
@@ -77,7 +77,7 @@ const EventManagement: React.FC = () => {
 
   const handleDeleteEvent = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este evento?')) return;
-    
+
     try {
       await eventsService.delete(id);
       await loadEvents();
@@ -124,13 +124,13 @@ const EventManagement: React.FC = () => {
         {error && <div className="error-message">{error}</div>}
 
         <div className="tabs">
-          <button 
+          <button
             className={`tab ${activeTab === 'events' ? 'active' : ''}`}
             onClick={() => setActiveTab('events')}
           >
             📅 Eventos
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === 'types' ? 'active' : ''}`}
             onClick={() => setActiveTab('types')}
           >
@@ -142,11 +142,11 @@ const EventManagement: React.FC = () => {
           <div className="tab-content">
             <div className="section-header">
               <h3>Gestión de Eventos</h3>
-              <button 
+              <button
                 onClick={() => {
                   setEditingEvent(null);
                   setShowEventForm(!showEventForm);
-                }} 
+                }}
                 className="btn-primary"
               >
                 {showEventForm ? 'Cancelar' : '+ Nuevo Evento'}
@@ -172,7 +172,7 @@ const EventManagement: React.FC = () => {
               </div>
             ) : (
               <div className="events-grid">
-                {events.map(event => (
+                {events.map((event) => (
                   <EventCard
                     key={event.id}
                     event={event}
@@ -198,4 +198,3 @@ const EventManagement: React.FC = () => {
 };
 
 export default EventManagement;
-

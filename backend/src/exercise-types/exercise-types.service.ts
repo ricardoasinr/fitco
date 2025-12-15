@@ -27,7 +27,7 @@ export class ExerciseTypesService {
     private readonly exerciseTypesRepository: ExerciseTypesRepository,
   ) {}
 
-  async create(createExerciseTypeDto: CreateExerciseTypeDto): Promise<ExerciseType> {
+  async create(createExerciseTypeDto: CreateExerciseTypeDto, userId: string): Promise<ExerciseType> {
     // Validar nombre no vacío
     if (!createExerciseTypeDto.name.trim()) {
       throw new BadRequestException('Name cannot be empty');
@@ -42,7 +42,7 @@ export class ExerciseTypesService {
       throw new ConflictException('Exercise type with this name already exists');
     }
 
-    return this.exerciseTypesRepository.create(createExerciseTypeDto);
+    return this.exerciseTypesRepository.create(createExerciseTypeDto, userId);
   }
 
   async findAll(): Promise<ExerciseType[]> {

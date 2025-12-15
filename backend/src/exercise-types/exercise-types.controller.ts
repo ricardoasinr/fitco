@@ -15,6 +15,17 @@ import { UpdateExerciseTypeDto } from './dto/update-exercise-type.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+
+/**
+ * User object from JWT strategy validation
+ */
+interface RequestUser {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+}
 
 /**
  * ExerciseTypesController - Manejo de endpoints de tipos de ejercicio
@@ -36,8 +47,11 @@ export class ExerciseTypesController {
   @Post()
   @Roles(Role.ADMIN)
   @UseGuards(RolesGuard)
-  create(@Body() createExerciseTypeDto: CreateExerciseTypeDto) {
-    return this.exerciseTypesService.create(createExerciseTypeDto);
+  create(
+    @Body() createExerciseTypeDto: CreateExerciseTypeDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.exerciseTypesService.create(createExerciseTypeDto, user.id);
   }
 
   @Public()

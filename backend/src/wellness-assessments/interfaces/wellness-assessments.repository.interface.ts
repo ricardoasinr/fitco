@@ -5,12 +5,17 @@ export interface WellnessAssessmentWithRegistration extends WellnessAssessment {
     id: string;
     userId: string;
     eventId: string;
+    eventInstanceId: string;
     qrCode: string;
     event: {
       id: string;
       name: string;
-      date: Date;
+      startDate: Date;
       time: string;
+    };
+    eventInstance: {
+      id: string;
+      dateTime: Date;
     };
     user: {
       id: string;
@@ -50,4 +55,3 @@ export interface IWellnessAssessmentsRepository {
   findPendingByUserId(userId: string): Promise<WellnessAssessmentWithRegistration[]>;
   update(id: string, data: UpdateWellnessAssessmentData): Promise<WellnessAssessment>;
 }
-

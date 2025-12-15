@@ -6,13 +6,51 @@ export interface ExerciseType {
   updatedAt: string;
 }
 
+// Tipos de recurrencia
+export type RecurrenceType = 'SINGLE' | 'WEEKLY' | 'INTERVAL';
+
+// Patrón de recurrencia
+export interface RecurrencePattern {
+  weekdays?: number[]; // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  intervalDays?: number;
+}
+
+// Instancia de evento (una fecha/hora específica)
+export interface EventInstance {
+  id: string;
+  eventId: string;
+  dateTime: string;
+  capacity: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  event?: {
+    id: string;
+    name: string;
+    description: string;
+    time: string;
+    capacity: number;
+    isActive: boolean;
+    exerciseType: {
+      id: string;
+      name: string;
+    };
+  };
+  _count?: {
+    registrations: number;
+  };
+}
+
 export interface Event {
   id: string;
   name: string;
   description: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   time: string;
   capacity: number;
+  recurrenceType: RecurrenceType;
+  recurrencePattern: RecurrencePattern | null;
   isActive: boolean;
   exerciseTypeId: string;
   createdAt: string;
@@ -22,8 +60,10 @@ export interface Event {
     name: string;
     isActive: boolean;
   };
+  instances?: EventInstance[];
   _count?: {
     registrations: number;
+    instances: number;
   };
 }
 
@@ -40,16 +80,20 @@ export interface UpdateExerciseTypeDto {
 export interface CreateEventDto {
   name: string;
   description: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   time: string;
   capacity: number;
+  recurrenceType?: RecurrenceType;
+  recurrencePattern?: RecurrencePattern;
   exerciseTypeId: string;
 }
 
 export interface UpdateEventDto {
   name?: string;
   description?: string;
-  date?: string;
+  startDate?: string;
+  endDate?: string;
   time?: string;
   capacity?: number;
   exerciseTypeId?: string;
@@ -76,8 +120,12 @@ export interface WellnessAssessment {
     event: {
       id: string;
       name: string;
-      date: string;
+      startDate: string;
       time: string;
+    };
+    eventInstance?: {
+      id: string;
+      dateTime: string;
     };
     user: {
       id: string;
@@ -101,6 +149,7 @@ export interface Registration {
   id: string;
   userId: string;
   eventId: string;
+  eventInstanceId: string;
   qrCode: string;
   createdAt: string;
   updatedAt: string;
@@ -108,7 +157,8 @@ export interface Registration {
     id: string;
     name: string;
     description: string;
-    date: string;
+    startDate: string;
+    endDate: string;
     time: string;
     capacity: number;
     isActive: boolean;
@@ -116,6 +166,12 @@ export interface Registration {
       id: string;
       name: string;
     };
+  };
+  eventInstance: {
+    id: string;
+    dateTime: string;
+    capacity: number;
+    isActive: boolean;
   };
   user?: {
     id: string;
@@ -127,6 +183,12 @@ export interface Registration {
 }
 
 export interface EventAvailability {
+  capacity: number;
+  registered: number;
+  available: number;
+}
+
+export interface InstanceAvailability {
   capacity: number;
   registered: number;
   available: number;
@@ -170,6 +232,7 @@ export interface AttendanceWithRegistration extends Attendance {
     id: string;
     userId: string;
     eventId: string;
+    eventInstanceId: string;
     qrCode: string;
     user: {
       id: string;
@@ -179,8 +242,12 @@ export interface AttendanceWithRegistration extends Attendance {
     event: {
       id: string;
       name: string;
-      date: string;
+      startDate: string;
       time: string;
+    };
+    eventInstance: {
+      id: string;
+      dateTime: string;
     };
     wellnessAssessments: Array<{
       id: string;
@@ -193,3 +260,8 @@ export interface AttendanceWithRegistration extends Attendance {
   };
 }
 
+// DTO para crear registro
+export interface CreateRegistrationDto {
+  eventId: string;
+  eventInstanceId: string;
+}

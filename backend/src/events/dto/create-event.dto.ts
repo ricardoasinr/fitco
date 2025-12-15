@@ -6,7 +6,31 @@ import {
   IsUUID,
   IsDateString,
   Matches,
+  IsEnum,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsNumber,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { RecurrenceType } from '@prisma/client';
+
+/**
+ * Patrón de recurrencia para eventos
+ * - WEEKLY: weekdays contiene los días de la semana (0=Domingo, 1=Lunes, ..., 6=Sábado)
+ * - INTERVAL: intervalDays contiene el número de días entre instancias
+ */
+export class RecurrencePatternDto {
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  weekdays?: number[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  intervalDays?: number;
+}
 
 export class CreateEventDto {
   @IsString()
@@ -19,7 +43,11 @@ export class CreateEventDto {
 
   @IsDateString()
   @IsNotEmpty()
-  date: string;
+  startDate: string;
+
+  @IsDateString()
+  @IsNotEmpty()
+  endDate: string;
 
   @IsString()
   @IsNotEmpty()
@@ -32,8 +60,16 @@ export class CreateEventDto {
   @Min(1, { message: 'Capacity must be at least 1' })
   capacity: number;
 
+  @IsEnum(RecurrenceType)
+  @IsOptional()
+  recurrenceType?: RecurrenceType = RecurrenceType.SINGLE;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => RecurrencePatternDto)
+  recurrencePattern?: RecurrencePatternDto;
+
   @IsUUID('4', { message: 'exerciseTypeId must be a valid UUID' })
   @IsNotEmpty()
   exerciseTypeId: string;
 }
-

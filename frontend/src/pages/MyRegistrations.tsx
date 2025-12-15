@@ -8,9 +8,10 @@ import '../styles/Registrations.css';
 
 /**
  * MyRegistrations - Página para ver inscripciones del usuario
- * 
+ *
  * Muestra:
  * - Lista de inscripciones con QR code
+ * - Fecha/hora de la instancia seleccionada
  * - Estado de wellness assessments
  * - Estado de asistencia
  * - Acciones disponibles
@@ -46,7 +47,7 @@ const MyRegistrations: React.FC = () => {
 
   const handleCancelRegistration = async (id: string) => {
     if (!confirm('¿Estás seguro de cancelar esta inscripción?')) return;
-    
+
     try {
       await registrationsService.cancel(id);
       await loadRegistrations();
@@ -56,14 +57,20 @@ const MyRegistrations: React.FC = () => {
   };
 
   const getStatusBadge = (registration: Registration) => {
-    const preAssessment = registration.wellnessAssessments.find(w => w.type === 'PRE');
-    const postAssessment = registration.wellnessAssessments.find(w => w.type === 'POST');
-    
+    const preAssessment = registration.wellnessAssessments.find(
+      (w) => w.type === 'PRE',
+    );
+    const postAssessment = registration.wellnessAssessments.find(
+      (w) => w.type === 'POST',
+    );
+
     if (postAssessment?.status === 'COMPLETED') {
       return <span className="status-badge completed">✅ Completado</span>;
     }
     if (registration.attendance?.attended) {
-      return <span className="status-badge attended">🎯 Asistido - POST pendiente</span>;
+      return (
+        <span className="status-badge attended">🎯 Asistido - POST pendiente</span>
+      );
     }
     if (preAssessment?.status === 'COMPLETED') {
       return <span className="status-badge pre-done">📋 PRE completado</span>;
@@ -72,12 +79,16 @@ const MyRegistrations: React.FC = () => {
   };
 
   const getPendingAction = (registration: Registration) => {
-    const preAssessment = registration.wellnessAssessments.find(w => w.type === 'PRE');
-    const postAssessment = registration.wellnessAssessments.find(w => w.type === 'POST');
+    const preAssessment = registration.wellnessAssessments.find(
+      (w) => w.type === 'PRE',
+    );
+    const postAssessment = registration.wellnessAssessments.find(
+      (w) => w.type === 'POST',
+    );
 
     if (preAssessment?.status === 'PENDING') {
       return (
-        <button 
+        <button
           onClick={() => navigate(`/wellness/${preAssessment.id}`)}
           className="btn-action btn-wellness"
         >
@@ -88,7 +99,7 @@ const MyRegistrations: React.FC = () => {
 
     if (postAssessment?.status === 'PENDING') {
       return (
-        <button 
+        <button
           onClick={() => navigate(`/wellness/${postAssessment.id}`)}
           className="btn-action btn-wellness"
         >
@@ -99,7 +110,7 @@ const MyRegistrations: React.FC = () => {
 
     if (postAssessment?.status === 'COMPLETED') {
       return (
-        <button 
+        <button
           onClick={() => navigate(`/wellness/impact/${registration.id}`)}
           className="btn-action btn-impact"
         >
@@ -117,16 +128,20 @@ const MyRegistrations: React.FC = () => {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
-  const isEventPast = (dateString: string) => {
-    const eventDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    eventDate.setHours(0, 0, 0, 0);
-    return eventDate < today;
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const isInstancePast = (dateString: string) => {
+    return new Date(dateString) < new Date();
   };
 
   return (
@@ -169,7 +184,7 @@ const MyRegistrations: React.FC = () => {
           </div>
         ) : (
           <div className="registrations-grid">
-            {registrations.map(registration => (
+            {registrations.map((registration) => (
               <div key={registration.id} className="registration-card">
                 <div className="registration-header">
                   <h3>{registration.event.name}</h3>
@@ -181,10 +196,10 @@ const MyRegistrations: React.FC = () => {
                     🏋️ {registration.event.exerciseType.name}
                   </p>
                   <p className="event-date">
-                    📅 {formatDate(registration.event.date)}
+                    📅 {formatDate(registration.eventInstance.dateTime)}
                   </p>
                   <p className="event-time">
-                    🕐 {registration.event.time}
+                    🕐 {formatTime(registration.eventInstance.dateTime)}
                   </p>
                 </div>
 
@@ -199,9 +214,9 @@ const MyRegistrations: React.FC = () => {
                 <div className="wellness-status">
                   <h4>Estado Wellness</h4>
                   <div className="wellness-indicators">
-                    {registration.wellnessAssessments.map(assessment => (
-                      <div 
-                        key={assessment.id} 
+                    {registration.wellnessAssessments.map((assessment) => (
+                      <div
+                        key={assessment.id}
                         className={`wellness-indicator ${assessment.status.toLowerCase()}`}
                       >
                         <span className="indicator-type">{assessment.type}</span>
@@ -215,15 +230,16 @@ const MyRegistrations: React.FC = () => {
 
                 <div className="registration-actions">
                   {getPendingAction(registration)}
-                  
-                  {!registration.attendance?.attended && !isEventPast(registration.event.date) && (
-                    <button 
-                      onClick={() => handleCancelRegistration(registration.id)}
-                      className="btn-action btn-cancel"
-                    >
-                      ❌ Cancelar
-                    </button>
-                  )}
+
+                  {!registration.attendance?.attended &&
+                    !isInstancePast(registration.eventInstance.dateTime) && (
+                      <button
+                        onClick={() => handleCancelRegistration(registration.id)}
+                        className="btn-action btn-cancel"
+                      >
+                        ❌ Cancelar
+                      </button>
+                    )}
                 </div>
               </div>
             ))}
@@ -235,4 +251,3 @@ const MyRegistrations: React.FC = () => {
 };
 
 export default MyRegistrations;
-

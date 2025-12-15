@@ -1,11 +1,12 @@
-import { Registration, WellnessAssessment, Attendance, Event, User } from '@prisma/client';
+import { Registration, WellnessAssessment, Attendance } from '@prisma/client';
 
 export interface RegistrationWithRelations extends Registration {
   event: {
     id: string;
     name: string;
     description: string;
-    date: Date;
+    startDate: Date;
+    endDate: Date;
     time: string;
     capacity: number;
     isActive: boolean;
@@ -13,6 +14,12 @@ export interface RegistrationWithRelations extends Registration {
       id: string;
       name: string;
     };
+  };
+  eventInstance: {
+    id: string;
+    dateTime: Date;
+    capacity: number;
+    isActive: boolean;
   };
   user?: {
     id: string;
@@ -26,6 +33,7 @@ export interface RegistrationWithRelations extends Registration {
 export interface CreateRegistrationData {
   userId: string;
   eventId: string;
+  eventInstanceId: string;
 }
 
 export interface IRegistrationsRepository {
@@ -33,9 +41,11 @@ export interface IRegistrationsRepository {
   findById(id: string): Promise<RegistrationWithRelations | null>;
   findByQrCode(qrCode: string): Promise<RegistrationWithRelations | null>;
   findByUserAndEvent(userId: string, eventId: string): Promise<RegistrationWithRelations | null>;
+  findByUserAndInstance(userId: string, eventInstanceId: string): Promise<RegistrationWithRelations | null>;
   findByUserId(userId: string): Promise<RegistrationWithRelations[]>;
   findByEventId(eventId: string): Promise<RegistrationWithRelations[]>;
+  findByEventInstanceId(eventInstanceId: string): Promise<RegistrationWithRelations[]>;
   countByEventId(eventId: string): Promise<number>;
+  countByEventInstanceId(eventInstanceId: string): Promise<number>;
   delete(id: string): Promise<Registration>;
 }
-

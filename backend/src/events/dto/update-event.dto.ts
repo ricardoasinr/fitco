@@ -1,5 +1,12 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType, OmitType } from '@nestjs/mapped-types';
 import { CreateEventDto } from './create-event.dto';
 
-export class UpdateEventDto extends PartialType(CreateEventDto) {}
-
+/**
+ * UpdateEventDto - DTO para actualizar eventos
+ * 
+ * Nota: No se permite cambiar recurrenceType o recurrencePattern después de crear
+ * Para modificar la recurrencia, se debe eliminar y crear de nuevo el evento
+ */
+export class UpdateEventDto extends PartialType(
+  OmitType(CreateEventDto, ['recurrenceType', 'recurrencePattern'] as const),
+) {}

@@ -5,6 +5,7 @@ export interface AttendanceWithRegistration extends Attendance {
     id: string;
     userId: string;
     eventId: string;
+    eventInstanceId: string;
     qrCode: string;
     user: {
       id: string;
@@ -14,8 +15,12 @@ export interface AttendanceWithRegistration extends Attendance {
     event: {
       id: string;
       name: string;
-      date: Date;
+      startDate: Date;
       time: string;
+    };
+    eventInstance: {
+      id: string;
+      dateTime: Date;
     };
     wellnessAssessments: Array<{
       id: string;
@@ -35,4 +40,3 @@ export interface IAttendanceRepository {
   markAttended(id: string, adminId: string): Promise<AttendanceWithRegistration>;
   findByEventId(eventId: string): Promise<AttendanceWithRegistration[]>;
 }
-

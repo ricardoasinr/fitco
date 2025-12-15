@@ -2,7 +2,7 @@ import { ExerciseType } from '@prisma/client';
 import { CreateExerciseTypeDto } from '../dto/create-exercise-type.dto';
 
 export interface IExerciseTypesRepository {
-  create(data: CreateExerciseTypeDto): Promise<ExerciseType>;
+  create(data: CreateExerciseTypeDto, userId: string): Promise<ExerciseType>;
   findById(id: string): Promise<ExerciseType | null>;
   findByName(name: string): Promise<ExerciseType | null>;
   findAll(): Promise<ExerciseType[]>;
