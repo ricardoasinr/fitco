@@ -115,6 +115,18 @@ describe('AttendanceController (e2e)', () => {
       },
     });
 
+    // Create PRE wellness assessment (completado) - REQUERIDO para marcar asistencia
+    await prisma.wellnessAssessment.create({
+      data: {
+        registrationId: registration.id,
+        type: 'PRE',
+        status: 'COMPLETED',
+        sleepQuality: 8,
+        stressLevel: 5,
+        mood: 7,
+      },
+    });
+
     // Login to get tokens
     const adminLogin = await request(app.getHttpServer())
       .post('/auth/login')
@@ -136,6 +148,13 @@ describe('AttendanceController (e2e)', () => {
 
   afterAll(async () => {
     // Clean up test data
+    await prisma.wellnessAssessment.deleteMany({
+      where: {
+        registration: {
+          eventId: testEventId,
+        },
+      },
+    });
     await prisma.attendance.deleteMany({
       where: {
         registration: {
@@ -186,6 +205,15 @@ describe('AttendanceController (e2e)', () => {
       await prisma.attendance.updateMany({
         where: { registrationId: testRegistrationId },
         data: { attended: false },
+      });
+
+      // Ensure PRE wellness assessment is completed
+      await prisma.wellnessAssessment.updateMany({
+        where: {
+          registrationId: testRegistrationId,
+          type: 'PRE',
+        },
+        data: { status: 'COMPLETED' },
       });
 
       const response = await request(app.getHttpServer())
@@ -261,7 +289,9 @@ describe('AttendanceController (e2e)', () => {
 
       expect(response.body).toHaveProperty('total');
       expect(response.body).toHaveProperty('attended');
-      expect(response.body).toHaveProperty('notAttended');
+      expect(response.body).toHaveProperty('pending');
+      expect(response.body).toHaveProperty('preCompleted');
+      expect(response.body).toHaveProperty('postCompleted');
     });
   });
 });

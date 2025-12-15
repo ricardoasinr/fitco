@@ -11,7 +11,7 @@ import { IsInt, Min, Max, IsNotEmpty } from 'class-validator';
 export class CompleteWellnessDto {
   @IsNotEmpty({ message: 'Sleep quality is required' })
   @IsInt({ message: 'Sleep quality must be an integer' })
-  @Min(1, { message: 'Sleep quality must be at least 1' })
+  @Min(0, { message: 'Sleep quality must be at least 0' })
   @Max(10, { message: 'Sleep quality must be at most 10' })
   sleepQuality: number;
 
@@ -23,7 +23,7 @@ export class CompleteWellnessDto {
 
   @IsNotEmpty({ message: 'Mood is required' })
   @IsInt({ message: 'Mood must be an integer' })
-  @Min(1, { message: 'Mood must be at least 1' })
+  @Min(0, { message: 'Mood must be at least 0' })
   @Max(10, { message: 'Mood must be at most 10' })
   mood: number;
 }

@@ -9,6 +9,7 @@ import { AttendanceList } from '../components/attendance/AttendanceList';
 import { UserDetailCard } from '../components/attendance/UserDetailCard';
 import '../styles/Dashboard.css';
 import '../styles/Registrations.css';
+import '../styles/AttendanceCheck.css';
 
 /**
  * AttendanceCheck - Página para que admin marque asistencia
