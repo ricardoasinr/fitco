@@ -96,6 +96,122 @@ async function main() {
     console.log(`   Password: ${adminPassword}\n`);
   }
 
+  // Crear ExerciseTypes
+  const exerciseTypes = [
+    { name: 'Yoga', description: 'Conecta cuerpo y mente mediante posturas y respiración.' },
+    { name: 'Pilates', description: 'Fortalece el núcleo y mejora la flexibilidad.' },
+    { name: 'Meditación', description: 'Encuentra paz interior y reduce el estrés.' },
+    { name: 'CrossFit', description: 'Entrenamiento funcional de alta intensidad.' },
+  ];
+
+  console.log('🏋️  Seeding ExerciseTypes...');
+
+  const createdTypes = [];
+
+  // Necesitamos un userId para crear los tipos (el admin que acabamos de crear/buscar)
+  const adminUser = await prisma.user.findUnique({ where: { email: adminEmail } });
+
+  if (adminUser) {
+    for (const type of exerciseTypes) {
+      const existing = await prisma.exerciseType.findFirst({ where: { name: type.name } });
+      if (!existing) {
+        const newType = await prisma.exerciseType.create({
+          data: {
+            ...type,
+            createdBy: adminUser.id,
+          },
+        });
+        createdTypes.push(newType);
+        console.log(`   Created: ${newType.name}`);
+      } else {
+        createdTypes.push(existing);
+        console.log(`   Exists: ${existing.name}`);
+      }
+    }
+
+    // Crear Eventos (Futuros y Pasados)
+    console.log('\n📅 Seeding Events...');
+
+    if (createdTypes.length > 0) {
+      const today = new Date();
+
+      // Evento 1: Mañana (Yoga)
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(10, 0, 0, 0);
+
+      const event1Data = {
+        name: 'Yoga al Amanecer',
+        description: 'Empieza tu día con energía positiva.',
+        exerciseTypeId: createdTypes.find(t => t.name === 'Yoga')?.id,
+        startDate: tomorrow,
+        endDate: tomorrow, // Mismo día
+        time: '10:00',
+        capacity: 20,
+        createdBy: adminUser.id,
+      };
+
+      // Evento 2: Pasado mañana (Pilates)
+      const dayAfter = new Date(today);
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      dayAfter.setHours(18, 0, 0, 0);
+
+      const event2Data = {
+        name: 'Pilates Core',
+        description: 'Clase intensiva de abdomen.',
+        exerciseTypeId: createdTypes.find(t => t.name === 'Pilates')?.id,
+        startDate: dayAfter,
+        endDate: dayAfter,
+        time: '18:00',
+        capacity: 15,
+        createdBy: adminUser.id,
+      };
+
+      // Crear eventos si no existen (búsqueda simple por nombre para no duplicar en seeds repetidos)
+      for (const evtData of [event1Data, event2Data]) {
+        if (evtData.exerciseTypeId) {
+          // Verificar si existe un evento similar (mismo nombre y fecha)
+          const existingEvt = await prisma.event.findFirst({
+            where: {
+              name: evtData.name,
+              // Simplificación: solo chequeamos nombre para el seed
+            }
+          });
+
+          if (!existingEvt) {
+            // Crear evento
+            const event = await prisma.event.create({
+              data: {
+                name: evtData.name,
+                description: evtData.description,
+                exerciseTypeId: evtData.exerciseTypeId,
+                startDate: evtData.startDate,
+                endDate: evtData.endDate,
+                time: evtData.time,
+                capacity: evtData.capacity,
+                createdBy: evtData.createdBy, // Fix: use createdBy from evtData (which is now correct)
+              }
+            });
+
+            // Generar instancia única para este evento (lógica simplificada del servicio)
+            await prisma.eventInstance.create({
+              data: {
+                eventId: event.id,
+                dateTime: evtData.startDate,
+                capacity: evtData.capacity,
+                isActive: true
+              }
+            });
+
+            console.log(`   Created Event: ${event.name}`);
+          } else {
+            console.log(`   Event Exists: ${evtData.name}`);
+          }
+        }
+      }
+    }
+  }
+
   console.log('🌱 Seed completed successfully!');
 }
 

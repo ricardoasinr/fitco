@@ -1,6 +1,6 @@
 # 🔒 Reporte de Pruebas de Seguridad
 
-**Fecha:** Diciembre 14, 2024  
+**Fecha:** Diciembre 14, 2025  
 **Sistema:** FITCO Backend API  
 **Versión:** 1.0.0
 
@@ -396,5 +396,5 @@ async register(registerDto: RegisterDto) {
 
 **✅ Sistema Seguro y Listo para Producción**
 
-*Última actualización: Diciembre 14, 2024*
+*Última actualización: Diciembre 14, 2025*
 

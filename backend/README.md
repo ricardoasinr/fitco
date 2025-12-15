@@ -98,7 +98,7 @@ GET /health
 ```json
 {
   "status": "ok",
-  "timestamp": "2024-01-15T10:30:00.000Z",
+  "timestamp": "2025-01-15T10:30:00.000Z",
   "service": "FITCO Backend API"
 }
 ```
@@ -138,8 +138,8 @@ Content-Type: application/json
     "email": "juan@example.com",
     "name": "Juan Pérez",
     "role": "USER",
-    "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T10:30:00.000Z"
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z"
   }
 }
 ```
@@ -168,8 +168,8 @@ Content-Type: application/json
     "email": "juan@example.com",
     "name": "Juan Pérez",
     "role": "USER",
-    "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T10:30:00.000Z"
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z"
   }
 }
 ```
@@ -200,8 +200,8 @@ Authorization: Bearer {access_token}
   "email": "juan@example.com",
   "name": "Juan Pérez",
   "role": "USER",
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T10:30:00.000Z"
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "updatedAt": "2025-01-15T10:30:00.000Z"
 }
 ```
 
@@ -219,8 +219,8 @@ Authorization: Bearer {access_token}
     "email": "juan@example.com",
     "name": "Juan Pérez",
     "role": "USER",
-    "createdAt": "2024-01-15T10:30:00.000Z",
-    "updatedAt": "2024-01-15T10:30:00.000Z"
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "updatedAt": "2025-01-15T10:30:00.000Z"
   }
 ]
 ```
@@ -246,8 +246,8 @@ Authorization: Bearer {access_token}
   "email": "juan@example.com",
   "name": "Juan Pérez",
   "role": "USER",
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T10:30:00.000Z"
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "updatedAt": "2025-01-15T10:30:00.000Z"
 }
 ```
 
@@ -279,8 +279,8 @@ Content-Type: application/json
   "email": "nuevo@example.com",
   "name": "Juan Pérez Actualizado",
   "role": "USER",
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T11:00:00.000Z"
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "updatedAt": "2025-01-15T11:00:00.000Z"
 }
 ```
 

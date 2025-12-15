@@ -278,5 +278,5 @@ Si tienes problemas, revisa:
 
 ---
 
-**Última actualización:** Diciembre 2024
+**Última actualización:** Diciembre 2025
 
